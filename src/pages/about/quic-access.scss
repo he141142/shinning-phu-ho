@@ -1,0 +1,15 @@
+.quick-access{
+    position: relative;
+}
+
+.quick-access::after{
+    content: '';
+    position: absolute;
+    display: block;
+    clear: both;
+    width: 2px;
+    height: 100%;
+    top: 0;
+    right:  0;
+    background-color: white;
+}
