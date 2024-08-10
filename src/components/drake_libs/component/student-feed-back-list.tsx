@@ -11,23 +11,41 @@ import { useEffect, useRef, useState } from "react";
 import Alert from '@mui/material/Alert';
 import CheckIcon from '@mui/icons-material/Check';
 import { getListStatus } from "@/models/mocks/get_list_student_object";
+import { FeedbackItem } from "@/models/feedback-item";
+
+
+type AlertObject = {
+  message: string,
+  severity: "success" | "error" | "warning" | "info"
+}
 
 export function StudentFeedBackList(props: {
-  students: StudentObject[]
+  students: StudentObject[],
+  addFeedback: (feedback: FeedbackItem) => void
 }) {
 
   const alertRef = useRef<HTMLDivElement>(null);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [selectStudent, setSelectStudent] = useState<StudentObject | undefined>(undefined);
+  const [selectStatus, setSelectStatus] = useState<string | undefined>(undefined);
   const [toogleAlert, setToogleAlert] = useState(false);
   const [listStatus, setListStatus] = useState<FeedBackStatus[]>([]);
+  const [alert, setAlert] = useState<AlertObject | undefined>(undefined);
 
   const handleStudentChange = (value: string) => {
     const student: StudentObject | undefined = props.students.find(s => s.id.toString() === value);
     setSelectStudent(student);
   }
 
+  const handleStatusChange = (value: string) => {
+    setSelectStatus(value);
+  }
   const handleSendFeedback = () => {
+    if (!selectStudent || !selectStatus || !textAreaRef.current?.value) {
+      setAlert({ message: "Please fill all fields", severity: "error" });
+    }
+
     setToogleAlert(true);
     timeoutRef.current = setTimeout(() => {
       setToogleAlert(false);
@@ -45,7 +63,7 @@ export function StudentFeedBackList(props: {
 
   useEffect(() => {
     setListStatus(getListStatus);
-  },[]);
+  }, []);
 
   useEffect(() => {
     if (toogleAlert) {
@@ -105,7 +123,7 @@ export function StudentFeedBackList(props: {
           <form className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="student">Student</Label>
-              <Select  onValueChange={handleStudentChange}>
+              <Select onValueChange={handleStudentChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a student" />
                 </SelectTrigger>
@@ -129,7 +147,7 @@ export function StudentFeedBackList(props: {
                 </div>
                 <div className="basis-1/2">
                   <div className="w-[50%]">
-                    <Select onValueChange={handleStudentChange}>
+                    <Select onValueChange={handleStatusChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="Choose status" />
                       </SelectTrigger>
@@ -148,7 +166,7 @@ export function StudentFeedBackList(props: {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="behavior">Behavior</Label>
-              <Textarea id="behavior" placeholder="Describe student behavior" />
+              <Textarea ref={textAreaRef} id="behavior" placeholder="Describe student behavior" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="progress">Assignment Progress</Label>
@@ -172,8 +190,8 @@ export function StudentFeedBackList(props: {
           </Link>
         </div>
         {
-          toogleAlert && <Alert className={`z-20 absolute top-0 right-0 alert ${toogleAlert ? 'transition ease-in-out delay-150 bg-blue-500 hover:-translate-y-1 scale-110 hover:bg-indigo-500 duration-300' : 'fade-out'}`} ref={alertRef} icon={<CheckIcon fontSize="inherit" />} severity="success">
-            Feedback Sent Successfully
+          toogleAlert && alert && <Alert className={`z-20 absolute top-0 right-0 alert ${toogleAlert ? 'transition ease-in-out delay-150 bg-blue-500 hover:-translate-y-1 scale-110 hover:bg-indigo-500 duration-300' : 'fade-out'}`} ref={alertRef} icon={<CheckIcon fontSize="inherit" />} severity={alert.severity}>
+            {alert?.message}
           </Alert>
         }
 
