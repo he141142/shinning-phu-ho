@@ -19,7 +19,7 @@ To read more about using these font, please visit the Next.js documentation:
 **/
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, use, useEffect } from "react"
 import { Input } from "@/components/drake_libs/ui/input"
 import { Button } from "@/components/drake_libs/ui/button"
 import { Card, CardHeader, CardContent } from "@/components/drake_libs/ui/card"
@@ -27,43 +27,40 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { Label } from "@/components/drake_libs/ui/label"
 import { Textarea } from "@/components/drake_libs/ui/textarea"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/drake_libs/ui/select"
+import { FeedbackItem, ToColor } from "@/models/feedback-item"
 
-export function FeedbackList() {
-  const [messages, setMessages] = useState([
-    {
-      student: "John Doe",
-      grades: "A, B, C",
-      behavior: "Excellent",
-      progress: "On track",
-      feedback: "positive",
-      message: "John is doing great in all his classes. Keep up the good work!",
-    },
-    {
-      student: "Jane Smith",
-      grades: "B, C, D",
-      behavior: "Needs improvement",
-      progress: "Falling behind",
-      feedback: "negative",
-      message:
-        "Jane is struggling in a few subjects and needs to focus more in class. Please schedule a meeting to discuss.",
-    },
-    {
-      student: "Michael Johnson",
-      grades: "A, A, A",
-      behavior: "Exemplary",
+
+
+export function FeedbackList(
+  props : {
+    FeedbackItems: FeedbackItem[]
+  }
+) {
+
+
+  const [messages, setMessages] = useState(props.FeedbackItems.map((item) => {
+    return {
+      student: item.title,
+      grades: item.grades,
+      behavior: item.behavior,
       progress: "Exceeding expectations",
-      feedback: "positive",
-      message: "Michael is excelling in all areas. We are very proud of his achievements.",
-    },
-    {
-      student: "Emily Davis",
-      grades: "B, B, C",
-      behavior: "Satisfactory",
-      progress: "On track",
-      feedback: "neutral",
-      message: "Emily is doing well overall. Let me know if you have any concerns.",
-    },
-  ])
+      feedback: item.feedback,
+      message: item.message,
+    }
+  }))
+
+  useEffect(() => {
+    setMessages(props.FeedbackItems.map((item) => {
+      return {
+        student: item.title,
+        grades: item.grades,
+        behavior: item.behavior,
+        progress: "Exceeding expectations",
+        feedback: item.feedback,
+        message: item.message,
+      }
+    }))
+  })
 
 
   const [templates, setTemplates] = useState([
@@ -164,12 +161,13 @@ export function FeedbackList() {
           {filteredMessages.map((message, index) => (
             <Card
               key={index}
-              className={`border-l-4 ${message.feedback === "positive"
-                ? "border-green-500"
-                : message.feedback === "negative"
-                  ? "border-red-500"
-                  : "border-gray-400"
-                }`}
+              // className={`border-l-4 ${message.feedback === "positive"
+              //   ? "border-green-500"
+              //   : message.feedback === "negative"
+              //     ? "border-red-500"
+              //     : "border-gray-400"
+              //   }`}
+              className={`border-l-4 ${ToColor(message.feedback)}`}
             >
               <CardHeader>
                 <div className="flex items-center justify-between">

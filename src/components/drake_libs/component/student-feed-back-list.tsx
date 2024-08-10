@@ -42,8 +42,22 @@ export function StudentFeedBackList(props: {
     setSelectStatus(value);
   }
   const handleSendFeedback = () => {
-    if (!selectStudent || !selectStatus || !textAreaRef.current?.value) {
+    let feedBackCanSend = selectStudent && selectStatus && textAreaRef.current?.value;
+
+    if (!feedBackCanSend) {
       setAlert({ message: "Please fill all fields", severity: "error" });
+    }
+
+    if (feedBackCanSend) {
+      props.addFeedback({
+        id: Math.floor(Math.random() * 1000),
+        title: selectStudent?.name || "",
+        grades: selectStudent?.grade || "",
+        behavior: textAreaRef.current?.value || "",
+        feedback: selectStatus || "",
+        message: textAreaRef.current?.value || ""
+      });
+      setAlert({ message: "Feedback sent successfully", severity: "success" });
     }
 
     setToogleAlert(true);
@@ -138,7 +152,6 @@ export function StudentFeedBackList(props: {
             </div>
             <div className="grid gap-2">
               <div className="flex justify-between">
-
                 <div>
                   <Label htmlFor="grades">Grades</Label>
                   {
