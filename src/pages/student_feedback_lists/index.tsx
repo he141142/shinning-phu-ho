@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 export default function StudentFeedbackLists() {
     const [students, setStudents] = useState<StudentObject[]>([]);
     const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
+    const [isFeedbackLoading, setIsFeedbackLoading] = useState<boolean>(false);
 
     const AddFeedBack = (feedback: FeedbackItem) => {
         setFeedbacks([...feedbacks, feedback]);
@@ -20,16 +21,18 @@ export default function StudentFeedbackLists() {
 
     useEffect(() => {
         setFeedbacks(fetchFeedbackStatus());
+        console.log("okkk");
+        
     }, []);
 
 
     return (
         <div className="flex flex-col">
             <div className="basis-1">
-                <FeedbackList />
+                <FeedbackList FeedbackItems={feedbacks}/>
             </div>
             <div>
-                <StudentFeedBackList students={students} />
+                <StudentFeedBackList students={students} addFeedback={AddFeedBack} />
             </div>
         </div>
     )
