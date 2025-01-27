@@ -29,8 +29,6 @@ import { Textarea } from "@/components/drake_libs/ui/textarea"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/drake_libs/ui/select"
 import { FeedbackItem, ToColor } from "@/models/feedback-item"
 
-
-
 export function FeedbackList(
   props : {
     FeedbackItems: FeedbackItem[]
@@ -50,6 +48,7 @@ export function FeedbackList(
   }))
 
   useEffect(() => {
+    console.log("2");
     setMessages(props.FeedbackItems.map((item) => {
       return {
         student: item.title,
@@ -60,27 +59,7 @@ export function FeedbackList(
         message: item.message,
       }
     }))
-  })
-
-
-  const [templates, setTemplates] = useState([
-    {
-      title: "Positive Feedback",
-      message:
-        "Your child is doing an excellent job in my class. They are engaged, hardworking, and a pleasure to have in the classroom.",
-    },
-    {
-      title: "Needs Improvement",
-      message:
-        "I have noticed your child is struggling in a few areas. Please schedule a meeting so we can discuss ways to help them improve.",
-    },
-    {
-      title: "Behavior Concerns",
-      message:
-        "I wanted to reach out about some behavior concerns I have noticed in class. Your child has been disruptive and not following instructions. Let's work together to address this issue.",
-    },
-  ])
-
+  },[])
 
   const [filterBy, setFilterBy] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
@@ -91,7 +70,8 @@ export function FeedbackList(
       if (filterBy === "date") return true
     })
   }, [messages, filterBy, searchTerm])
-
+  console.log("1");
+  
 
   return (
     <div className="flex flex-col h-full bg-slate-400 ">
@@ -161,12 +141,6 @@ export function FeedbackList(
           {filteredMessages.map((message, index) => (
             <Card
               key={index}
-              // className={`border-l-4 ${message.feedback === "positive"
-              //   ? "border-green-500"
-              //   : message.feedback === "negative"
-              //     ? "border-red-500"
-              //     : "border-gray-400"
-              //   }`}
               className={`border-l-4 ${ToColor(message.feedback)}`}
             >
               <CardHeader>

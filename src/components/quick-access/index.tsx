@@ -1,15 +1,30 @@
+"use client"; // This is a client component 👈🏽
+
+
 import HomeIcon from '@mui/icons-material/Home';
 import DesignServicesIcon from '@mui/icons-material/DesignServices';
 import ContactPhoneIcon from '@mui/icons-material/ContactPhone';
 import InfoIcon from '@mui/icons-material/Info';
+import { useRouter } from 'next/navigation';
+import React, { MouseEventHandler } from 'react';
+"use-client";
 export default function QuickAcess() {
+    const router = useRouter();
+
+    const HanldeCLickOnURLLi = (url?: string): MouseEventHandler<HTMLLIElement> => {
+        return (e: React.MouseEvent<HTMLLIElement,MouseEvent>) => {
+            // e.preventDefault()
+            router.push(url || '')
+        }
+    }
     return (
         <>
             <ul className="flex flex-col md:flex-col gap-y-6 pt-[20px]">
                 <li className="group active hover:bg-violet-600
                 h-[70px]
                  active:bg-violet-700 
-                 p-[10px] cursor-pointer">
+                 p-[10px] cursor-pointer"
+                 onClick={HanldeCLickOnURLLi("/")}>
                     <div className="group-hover:text-white">
                         <div className='inline'>
                             <HomeIcon sx={{
@@ -32,9 +47,9 @@ export default function QuickAcess() {
                 <li className="group active hover:bg-violet-600 active:bg-violet-700 p-[10px] cursor-pointer">
                     <div className="group-hover:text-white">
                         <div className='inline'>
-                            <ContactPhoneIcon  sx={{
+                            <ContactPhoneIcon sx={{
                                 fontSize: 40
-                            }}/>
+                            }} />
                         </div>
                         <p className='inline ml-4 text-xl font-bold'>Contact</p>
                     </div>

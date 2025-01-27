@@ -1,0 +1,25 @@
+useHook
+    1. Fetch 
+        Patient = current cycle 
+        Scheme = current cycle
+    2. Re-use
+        A B C D => boolean
+    
+    useFilter(api)
+        - changePage
+        - changeLimit
+        - Change order
+        - Search
+
+        => return {
+            items:
+            page:
+            totalPage:
+        }
+
+HOC 
+
+WrapperComponent 
+   2. Re-use
+        A B C D => boolean
+

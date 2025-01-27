@@ -9,7 +9,6 @@ import { useEffect, useState } from "react";
 export default function StudentFeedbackLists() {
     const [students, setStudents] = useState<StudentObject[]>([]);
     const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
-    const [isFeedbackLoading, setIsFeedbackLoading] = useState<boolean>(false);
 
     const AddFeedBack = (feedback: FeedbackItem) => {
         setFeedbacks([...feedbacks, feedback]);
@@ -20,9 +19,7 @@ export default function StudentFeedbackLists() {
     }, []);
 
     useEffect(() => {
-        setFeedbacks(fetchFeedbackStatus());
-        console.log("okkk");
-        
+        setFeedbacks(fetchFeedbackStatus());        
     }, []);
 
 

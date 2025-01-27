@@ -81,20 +81,22 @@ const fetchFeedbackStatus = (): FeedbackItem[] => {
     {
       id: 1,
       title: "Van Ha",
-      message: "Van Ha is doing great in all his classes. Keep up the good work!",
+      message:
+        "Van Ha is doing great in all his classes. Keep up the good work!",
       behavior: "No comment",
       grades: "Grade 5",
       feedback: "Good",
     },
     {
-        id: 2,
-        title: "Quang Huy",
-        message: "Quang Huy is very lazy to do his homework. He needs to improve his behavior.",
-        behavior: "No comment",
-        grades: "Grade 4",
-        feedback: "Bad",
-      },
+      id: 2,
+      title: "Quang Huy",
+      message:
+        "Quang Huy is very lazy to do his homework. He needs to improve his behavior.",
+      behavior: "No comment",
+      grades: "Grade 4",
+      feedback: "Bad",
+    },
   ];
 };
 
-export { getListStatus, ListStudentObjects,fetchFeedbackStatus };
+export { getListStatus, ListStudentObjects, fetchFeedbackStatus };
