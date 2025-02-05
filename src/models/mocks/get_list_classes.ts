@@ -1,4 +1,4 @@
-import { ClassInfo, GradeInfo } from "../class"
+import { ClassInfo, GradeInfo } from "../class/class"
 
 export const getListClasses = ():ClassInfo[] => { 
     return [

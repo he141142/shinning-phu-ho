@@ -6,19 +6,94 @@ import { Button } from "@/components/drake_libs/ui/button"
 import { useEffect, useState } from "react"
 import { getListClasses } from "@/models/mocks/get_list_classes"
 import { useRouter } from "next/router";
+import { ClassInfo, GetListClassResponse } from "@/models/class/class";
+import { HOST } from "@/static/env";
+import { ErrorPage, LoadingPage } from "./loading-page";
+import { PaginationNav } from "./pagination";
+import { PlusIcon } from "lucide-react";
+
 
 export function ClassManagement() {
 
 
   const [classes, setClasses] = useState<ClassInfo[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
   useEffect(() => {
-    const fetchData = async () => {
-      setClasses(getListClasses());
-    }
-    fetchData();
-  }, [])
+    const fetchClasses = async () => {
+      setLoading(true);
+      
+      try {
+        const response = await fetch(`${HOST}/query`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query: `
+              query {
+                GetListClass(input: {
+                  page: 1,
+                  limit: 10,
+                  order_by: "id desc",
+                  where: {}
+                }) {
+                  total
+                  data {
+                    class_id
+                    class_name
+                    description
+                    teacher_id
+                    start_date
+                    end_date
+                    max_students
+                    current_enrollment
+                    room_id
+                    schedule
+                  }
+                }
+              }
+            `,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (result.errors) {
+          throw new Error(result.errors[0].message);
+        }
+
+        const data: GetListClassResponse = result.data;
+        console.log(data);
+
+        setClasses(data.GetListClass.data.map((data) => {
+          let classInfo: ClassInfo = {
+            Id: data.class_id,
+            Name: data.class_name,
+            Description: data.description,
+            Teacher: data.teacher_id?.toString() || "-",
+            Status: "Active",
+            Enrolled: data.current_enrollment,
+          }
+          return classInfo;
+        }));
+
+      } catch (err: any) {
+
+        
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClasses();
+  }, []);
 
   const handleClassOnClick = (classID: number): () => void => {
     return () => {
@@ -46,13 +121,19 @@ export function ClassManagement() {
     })
   }
 
+  if (loading) return <LoadingPage />;
+  if (error) return <ErrorPage message="failed to render"/>;
 
   return (
     <div className="flex min-h-screen w-full ">
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-        <header className="bg-slate-400 sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <h1 className=" text-lg font-semibold">Classes</h1>
-        </header>
+       <div className="flex items-center justify-between mb-6">
+                       <h1 className="text-2xl font-bold">Class Management</h1>
+                       <Button onClick={() => {}} className="flex items-center gap-2">
+                           <PlusIcon className="w-4 h-4" />
+                           Add Class
+                       </Button>
+                   </div>
         <main className="grid content-between flex-0 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-4">
           {renderClassComponent()}
           <Card >
@@ -67,9 +148,8 @@ export function ClassManagement() {
               </div>
             </CardContent>
           </Card>
-          <Button size="sm" className="col-span-full">
-            Add New Class
-          </Button>
+          
+          <PaginationNav initialPage={0} totalPages={100}></PaginationNav>
         </main>
       </div>
     </div>

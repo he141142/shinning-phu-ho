@@ -11,6 +11,7 @@
   },
   "aliases": {
     "utils": "@/lib/utils",
-    "components": "@/components/drake_libs"
+    "components": "@/components/drake_libs",
+    "hooks": "@/components/hooks"
   }
 }

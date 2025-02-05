@@ -40,3 +40,7 @@
     @apply font-heading;
   }
 }
+
+.hide-selected-month .text-sm.font-medium  {
+  display: none !important;
+}

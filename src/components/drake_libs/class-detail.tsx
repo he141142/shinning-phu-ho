@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { CalendarDays, GraduationCap, Users, UserPlus } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/drake_libs/ui/avatar"
 import { Badge } from "@/components/drake_libs/ui/badge"
@@ -9,13 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/drake_libs/ui/label"
 import { Switch } from "@/components/drake_libs/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/drake_libs/ui/tabs"
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/drake_libs/ui/table"
 import {
   Dialog,
@@ -23,56 +23,145 @@ import {
   DialogTrigger,
 } from "@/components/drake_libs/ui/dialog"
 import EnrollStudentForm from "./enroll-student-form"
+import { HOST } from "@/static/env"
+import { GetClassById, GetClassByIdResponse, StudentTabListModel } from "@/models/class/class.detail"
+import { UseFetch } from "../hooks/fetch-data"
+import { ErrorPage, LoadingPage } from "./component/loading-page"
+import { GraphQLResponse, TimeTable } from "@/models/class/class"
+import EditableSection from "@/pages/class_detail/components/editablesection"
 
-export function ClassDetailComponent() {
+export function ClassDetailComponent({ slug }: { slug: string }) {
   const [activeTab, setActiveTab] = useState("details")
   const [activeStudentTab, setActiveStudentTab] = useState("all")
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
-  const [config, setConfig] = useState({
-    autoGrading: false,
-    attendanceRequired: true,
-    lateSubmissions: true,
-    peerReviews: false,
-    groupProjects: true,
-  })
+  const [config, setConfig] = useState<Record<string, boolean>>({});
 
-  // Mock data - replace with actual data in a real application
-  const classData = {
-    name: "Advanced Web Development",
-    id: "WEB301",
-    totalEnrollment: 25,
-    description: "This course covers advanced topics in web development including modern frameworks, serverless architectures, and progressive web apps.",
-    grade: "Undergraduate",
-    teacher: {
-      name: "Dr. Jane Smith",
-      avatar: "/placeholder.svg?height=40&width=40"
-    },
-    startDate: "2023-09-01",
-    currentSemester: "Fall 2023",
-    students: {
-      all: [
-        { id: 1, name: "Alice Johnson", avatar: "/placeholder.svg?height=40&width=40" },
-        { id: 2, name: "Bob Williams", avatar: "/placeholder.svg?height=40&width=40" },
-        { id: 3, name: "Charlie Brown", avatar: "/placeholder.svg?height=40&width=40" },
-        { id: 4, name: "Diana Ross", avatar: "/placeholder.svg?height=40&width=40" },
-        { id: 5, name: "Ethan Hunt", avatar: "/placeholder.svg?height=40&width=40" },
-      ],
-      active: [
-        { id: 1, name: "Alice Johnson", avatar: "/placeholder.svg?height=40&width=40" },
-        { id: 2, name: "Bob Williams", avatar: "/placeholder.svg?height=40&width=40" },
-        { id: 4, name: "Diana Ross", avatar: "/placeholder.svg?height=40&width=40" },
-      ],
-      inactive: [
-        { id: 3, name: "Charlie Brown", avatar: "/placeholder.svg?height=40&width=40" },
-        { id: 5, name: "Ethan Hunt", avatar: "/placeholder.svg?height=40&width=40" },
-      ],
-    },
-    timetable: [
-      { day: "Monday", time: "10:00 AM - 11:30 AM", room: "Tech 101" },
-      { day: "Wednesday", time: "10:00 AM - 11:30 AM", room: "Tech 101" },
-      { day: "Friday", time: "2:00 PM - 3:30 PM", room: "Online" },
+
+  console.log(slug);
+
+
+  const { data, error, loading } = UseFetch<GetClassById>(`${HOST}/query`, `
+    query{
+      GetClassById(input:{
+        class_id: ${slug}
+      }){
+        class_id
+        class_name
+        description
+        students{
+          id
+          first_name
+          last_name
+          dob
+          email
+          phone
+          address
+          emergency_contact_name
+          emergency_contact_phone
+        }
+        class_config{
+          name
+          description
+          config_id
+          is_enable
+        }
+        max_students
+        current_enrollment
+        room_id
+        room{
+            capacity
+            center{
+                center_id
+            }
+            room_id
+            room_number
+        }
+        teacher{
+          teacher_id
+          first_name
+          last_name
+          middle_name
+          dob
+          gender
+          phone_number
+          email
+          specialization
+          hire_date
+          profile_picture
+          
+        }
+      }
+    }
+    `)
+
+  useEffect(() => {
+    if (data) {
+      let cfg: Record<string, boolean> = {};
+      data?.GetClassById?.class_config.forEach((config) => {
+        cfg[config.config_id.toString()] = config.is_enable;
+      });
+
+      setConfig(cfg); // Set state here once
+      console.log(cfg);
+
+    }
+  }, [data]);
+
+  if (loading) return <LoadingPage />;
+  if (error) return <ErrorPage message="failed to render" />;
+
+
+  // TODO: Fetch timetable data from the server
+  function fetchTimeTable(): TimeTable[] {
+    return [
+      {
+        day: "Monday",
+        room: "Tech 101",
+        time: "10:00 AM - 11:30 AM"
+      },
+      {
+        day: "Wednesday",
+        room: "Tech 101",
+        time: "10:00 AM - 11:30 AM"
+      },
+      {
+        day: "Friday",
+        room: "Online",
+        time: "3:30 PM"
+      }
     ]
   }
+
+  function transformToStudentModel(): StudentTabListModel {
+    let studentTabModel: StudentTabListModel = {
+      all: [],
+      active: [],
+      in_active: []
+    }
+    data?.GetClassById?.students.forEach(student => {
+      studentTabModel.all.push({
+        id: student.id,
+        first_name: student.first_name,
+        last_name: student.last_name,
+        dob: student.dob,
+        email: student.email,
+        phone: student.phone,
+        address: student.address,
+        emergency_contact_name: student.emergency_contact_name,
+        emergency_contact_phone: student.emergency_contact_phone,
+        avatar: "/placeholder.svg?height=40&width=40"
+      })
+    });
+    studentTabModel.active = studentTabModel.all.filter(student => student.id % 2 === 0)
+    studentTabModel.in_active = studentTabModel.all.filter(student => student.id % 2 !== 0)
+    return studentTabModel
+  }
+
+  if (!data) {
+    return <div>No data found</div>
+  }
+
+  let dataLoaded = transformToStudentModel();
 
   const handleConfigChange = (key: string) => {
     setConfig(prevConfig => ({
@@ -85,42 +174,51 @@ export function ClassDetailComponent() {
     <div className="container mx-auto p-6 space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-2xl">{classData.name}</CardTitle>
-              <CardDescription>Class ID: {classData.id}</CardDescription>
-            </div>
-            <Badge variant="secondary">{classData.grade}</Badge>
-          </div>
+          <EditableSection title="Class Name" onSave={() => console.log("Saved")}>
+            {
+              (isEditing) => {
+                return (
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-2xl">{data?.GetClassById?.class_name}</CardTitle>
+                      <CardDescription>Class ID: {data?.GetClassById?.class_id}</CardDescription>
+                    </div>
+                    <Badge variant="secondary">{data?.GetClassById?.grade}</Badge>
+                  </div>
+                )
+              }
+            }
+          </EditableSection>
+
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
                 <Label className="font-semibold">Description</Label>
-                <p className="text-sm text-muted-foreground">{classData.description}</p>
+                <p className="text-sm text-muted-foreground">{data?.GetClassById?.description}</p>
               </div>
               <div className="flex items-center space-x-2">
                 <Users className="h-4 w-4" />
-                <span className="text-sm">Total Enrollment: {classData.totalEnrollment}</span>
+                <span className="text-sm">Total Enrollment: {data?.GetClassById?.current_enrollment}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <GraduationCap className="h-4 w-4" />
-                <span className="text-sm">Current Semester: {classData.currentSemester}</span>
+                <span className="text-sm">Current Semester: {data?.GetClassById?.current_semester}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <CalendarDays className="h-4 w-4" />
-                <span className="text-sm">Start Date: {classData.startDate}</span>
+                <span className="text-sm">Start Date: {data?.GetClassById?.start_date}</span>
               </div>
             </div>
             <div>
               <Label className="font-semibold">Teacher (Host)</Label>
               <div className="flex items-center space-x-2 mt-2">
                 <Avatar>
-                  <AvatarImage src={classData.teacher.avatar} alt={classData.teacher.name} />
-                  <AvatarFallback>{classData.teacher.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  <AvatarImage src={data?.GetClassById?.teacher?.profile_picture} alt={data?.GetClassById?.teacher?.first_name + " " + data?.GetClassById?.teacher?.last_name} />
+                  {/* <AvatarFallback>{data.teacher.name.split(' ').map(n => n[0]).join('')}</AvatarFallback> */}
                 </Avatar>
-                <span>{classData.teacher.name}</span>
+                <span>{data?.GetClassById?.teacher?.last_name}</span>
               </div>
             </div>
           </div>
@@ -143,19 +241,19 @@ export function ClassDetailComponent() {
                 <div className="space-y-4">
                   <div>
                     <Label className="font-semibold">Description</Label>
-                    <p className="text-sm text-muted-foreground">{classData.description}</p>
+                    <p className="text-sm text-muted-foreground">{data?.GetClassById?.description}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Users className="h-4 w-4" />
-                    <span className="text-sm">Total Enrollment: {classData.totalEnrollment}</span>
+                    <span className="text-sm">Total Enrollment: {data?.GetClassById?.current_enrollment}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <GraduationCap className="h-4 w-4" />
-                    <span className="text-sm">Current Semester: {classData.currentSemester}</span>
+                    <span className="text-sm">Current Semester: {data?.GetClassById?.current_semester}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <CalendarDays className="h-4 w-4" />
-                    <span className="text-sm">Start Date: {classData.startDate}</span>
+                    <span className="text-sm">Start Date: {data?.GetClassById?.start_date}</span>
                   </div>
                 </div>
               </CardContent>
@@ -174,7 +272,7 @@ export function ClassDetailComponent() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {classData.timetable.map((session, index) => (
+                    {fetchTimeTable().map((session, index) => (
                       <TableRow key={index}>
                         <TableCell>{session.day}</TableCell>
                         <TableCell>{session.time}</TableCell>
@@ -212,16 +310,16 @@ export function ClassDetailComponent() {
                   <TabsTrigger value="active">Active</TabsTrigger>
                   <TabsTrigger value="inactive">Inactive</TabsTrigger>
                 </TabsList>
-                {(Object.keys(classData.students) as Array<keyof typeof classData.students>).map((category) => (
+                {(Object.keys(dataLoaded) as Array<keyof typeof dataLoaded>).map((category) => (
                   <TabsContent key={category} value={category}>
                     <div className="space-y-4">
-                      {classData.students[category].map((student) => (
+                      {dataLoaded[category].map((student) => (
                         <div key={student.id} className="flex items-center space-x-2">
                           <Avatar>
-                            <AvatarImage src={student.avatar} alt={student.name} />
-                            <AvatarFallback>{student.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                            <AvatarImage src={student.avatar} alt={student?.first_name + " " + student?.last_name} />
+                            {/* <AvatarFallback>{student.name.split(' ').map(n => n[0]).join('')}</AvatarFallback> */}
                           </Avatar>
-                          <span>{student.name}</span>
+                          <span>{student?.first_name + " " + student?.last_name}</span>
                         </div>
                       ))}
                     </div>
@@ -239,61 +337,21 @@ export function ClassDetailComponent() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="auto-grading">Auto Grading</Label>
-                    <p className="text-sm text-muted-foreground">Enable automatic grading for assignments</p>
-                  </div>
-                  <Switch
-                    id="auto-grading"
-                    checked={config.autoGrading}
-                    onCheckedChange={() => handleConfigChange('autoGrading')}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="attendance">Attendance Required</Label>
-                    <p className="text-sm text-muted-foreground">Make attendance mandatory for this class</p>
-                  </div>
-                  <Switch
-                    id="attendance"
-                    checked={config.attendanceRequired}
-                    onCheckedChange={() => handleConfigChange('attendanceRequired')}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="late-submissions">Allow Late Submissions</Label>
-                    <p className="text-sm text-muted-foreground">Permit students to submit assignments after the deadline</p>
-                  </div>
-                  <Switch
-                    id="late-submissions"
-                    checked={config.lateSubmissions}
-                    onCheckedChange={() => handleConfigChange('lateSubmissions')}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="peer-reviews">Enable Peer Reviews</Label>
-                    <p className="text-sm text-muted-foreground">Allow students to review each other's work</p>
-                  </div>
-                  <Switch
-                    id="peer-reviews"
-                    checked={config.peerReviews}
-                    onCheckedChange={() => handleConfigChange('peerReviews')}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="group-projects">Enable Group Projects</Label>
-                    <p className="text-sm text-muted-foreground">Allow collaborative group projects</p>
-                  </div>
-                  <Switch
-                    id="group-projects"
-                    checked={config.groupProjects}
-                    onCheckedChange={() => handleConfigChange('groupProjects')}
-                  />
-                </div>
+                {
+                  data?.GetClassById?.class_config.map((cfg) => (
+                    <div key={cfg.config_id} className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="auto-grading">{cfg.name}</Label>
+                        <p className="text-sm text-muted-foreground">{config.description}</p>
+                      </div>
+                      <Switch
+                        id="auto-grading"
+                        checked={config[cfg.config_id.toString()]}
+                        onCheckedChange={() => handleConfigChange(cfg.config_id.toString())}
+                      />
+                    </div>
+                  ))
+                }
               </div>
               <Button className="mt-6">Save Configuration</Button>
             </CardContent>

@@ -4,15 +4,72 @@ import { Button } from "@/components/drake_libs/ui/button"
 import { Card, CardContent } from "@/components/drake_libs/ui/card"
 import { Badge } from "@/components/drake_libs/ui/badge"
 import OnlineStatus from "@/components/common/online"
-import { MouseEvent, MouseEventHandler } from "react"
+import { MouseEvent, MouseEventHandler, useMemo } from "react"
 import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation'
+import { UseFetch } from "@/components/hooks/fetch-data"
+import { UseFetchGraphqlWithVariable } from "@/components/hooks/fetch-variable"
+import { HOST } from "@/static/env"
+import { ErrorPage, LoadingPage } from "@/components/drake_libs/component/loading-page"
+import { GetListStudentResponse } from "@/models/students/GetListStudent/GetListStudent"
 
 export default function StudentManagements() {
     const router = useRouter()
     const onSubmitFunc = (e: MouseEvent<HTMLButtonElement>) => {
         router.push("/students/create");
     }
+
+    const variables = useMemo(() => ({
+        input: {
+            page: 1,
+            limit: 100,
+            order_by: "class desc",
+            where: {}
+        }
+    }), []);
+
+    const { data, error, loading } = UseFetchGraphqlWithVariable<GetListStudentResponse>(`${HOST}/query`, `
+            query getListStudent($input:GetListStudentInput!){
+                GetListStudent(input: $input){
+                    total
+                    data{
+                        id
+                        first_name
+                        last_name
+                        dob
+                        email
+                        address
+                        classes{
+                            class_id
+                            class_name
+                        }
+                        subject{
+                            id
+                            name
+                        }
+                        grade{
+                            grade_id
+                            grade_name
+                        }
+                    }
+                }
+            }
+        `,
+        variables
+    )
+
+    if (loading) {
+        return <LoadingPage />
+    }
+
+    if (error) {
+        return <ErrorPage message={error} />
+    }
+
+    const handleOnView = (id: number) => {
+        router.push(`/student-info/${id}`);
+    }
+
 
     return (
         <div className="max-w-100 mx-auto  ">
@@ -24,209 +81,56 @@ export default function StudentManagements() {
                 </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <Card className="relative">
 
-                    <CardContent className="p-4 flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center justify-between mb-2 relative">
-                                <OnlineStatus style={
-                                    {
-                                        position: "absolute",
-                                        top: "0",
-                                        left: "5",
-                                        zIndex: 10
-                                    }
-                                } />
-                                <h2 className="text-lg font-semibold">John Doe</h2>
-                                <div className="flex items-center gap-2">
-                                    <Badge>Grade 10</Badge>
-                                    <Badge variant="secondary">Math</Badge>
-                                </div>
-                            </div>
-                            <div className="text-muted-foreground">
-                                <div>Class: Math</div>
-                                <div>Grade: A</div>
-                            </div>
-                        </div>
-                        <div className="flex w-[100%] justify-end gap-2 mt-4">
-                            <Button variant="outline" size="sm">
-                                <EyeIcon className="w-4 h-4" />
-                                View
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <FilePenIcon className="w-4 h-4" />
-                                Edit
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <TrashIcon className="w-4 h-4" />
-                                Delete
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="relative">
-                    <OnlineStatus style={
-                        {
-                            position: "absolute",
-                            top: "0",
-                            right: "0",
-                            zIndex: 10
-                        }
-                    } />
-                    <CardContent className="p-4 flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-semibold">Jane Smith</h2>
-                                <div className="flex items-center gap-2">
-                                    <Badge>Grade 11</Badge>
-                                    <Badge variant="secondary">English</Badge>
-                                </div>
-                            </div>
-                            <div className="text-muted-foreground">
-                                <div>Class: English</div>
-                                <div>Grade: B+</div>
-                            </div>
-                        </div>
-                        <div className="flex justify-end gap-2 mt-4">
-                            <Button variant="outline" size="sm">
-                                <EyeIcon className="w-4 h-4" />
-                                View
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <FilePenIcon className="w-4 h-4" />
-                                Edit
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <TrashIcon className="w-4 h-4" />
-                                Delete
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="relative">
-                    <CardContent className="p-4 flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-semibold">Michael Johnson</h2>
-                                <div className="flex items-center gap-2">
-                                    <Badge>Grade 9</Badge>
-                                    <Badge variant="secondary">Science</Badge>
-                                </div>
-                            </div>
-                            <div className="text-muted-foreground">
-                                <div>Class: Science</div>
-                                <div>Grade: B</div>
-                            </div>
-                        </div>
-                        <div className="flex justify-end gap-2 mt-4">
-                            <Button variant="outline" size="sm">
-                                <EyeIcon className="w-[10%] h-4" />
-                                View
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <FilePenIcon className="w-4 h-4" />
-                                Edit
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <TrashIcon className="w-4 h-4" />
-                                Delete
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="relative">
-                    <CardContent className="p-4 flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-semibold">Emily Davis</h2>
-                                <div className="flex items-center gap-2">
-                                    <Badge>Grade 12</Badge>
-                                    <Badge variant="secondary">History</Badge>
-                                </div>
-                            </div>
-                            <div className="text-muted-foreground">
-                                <div>Class: History</div>
-                                <div>Grade: A-</div>
-                            </div>
-                        </div>
-                        <div className="flex w-[100%] justify-end gap-2 mt-4">
-                            <Button variant="outline" size="sm">
-                                <EyeIcon className="w-4 h-4" />
-                                View
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <FilePenIcon className="w-4 h-4" />
-                                Edit
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <TrashIcon className="w-4 h-4" />
-                                Delete
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="relative">
-                    <CardContent className="p-4 flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-semibold">Jane Smith</h2>
-                                <div className="flex items-center gap-2">
-                                    <Badge>Grade 11</Badge>
-                                    <Badge variant="secondary">English</Badge>
-                                </div>
-                            </div>
-                            <div className="text-muted-foreground">
-                                <div>Class: English</div>
-                                <div>Grade: B+</div>
-                            </div>
-                        </div>
-                        <div className="flex justify-end gap-2 mt-4">
-                            <Button variant="outline" size="sm">
-                                <EyeIcon className="w-4 h-4" />
-                                View
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <FilePenIcon className="w-4 h-4" />
-                                Edit
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <TrashIcon className="w-4 h-4" />
-                                Delete
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="relative">
-                    <CardContent className="p-4 flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-semibold">Jane Smith</h2>
-                                <div className="flex items-center gap-2">
-                                    <Badge>Grade 11</Badge>
-                                    <Badge variant="secondary">English</Badge>
-                                </div>
-                            </div>
-                            <div className="text-muted-foreground">
-                                <div>Class: English</div>
-                                <div>Grade: B+</div>
-                            </div>
-                        </div>
-                        <div className="flex justify-end gap-2 mt-4">
-                            <Button variant="outline" size="sm">
-                                <EyeIcon className="w-4 h-4" />
-                                View
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <FilePenIcon className="w-4 h-4" />
-                                Edit
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <TrashIcon className="w-4 h-4" />
-                                Delete
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                {
+                    data?.GetListStudent.data.map((student, index) => {
+                        return (
+                            <>
+                                <Card className="relative">
+                                    <OnlineStatus style={
+                                        {
+                                            position: "absolute",
+                                            top: "0",
+                                            right: "0",
+                                            zIndex: 10
+                                        }
+                                    } />
+                                    <CardContent className="p-4 flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <h2 className="text-lg font-semibold">{`${student.first_name} ${student.last_name}`}</h2>
+                                                <div className="flex items-center gap-2">
+                                                    <Badge>Grade {student.grade?student.grade.grade_name:"-"}</Badge>
+                                                    <Badge variant="secondary">English</Badge>
+                                                </div>
+                                            </div>
+                                            <div className="text-muted-foreground">
+                                                <div>Class: {!student.classes ? "-" : student.classes.length == 0 ? "-" : student.classes[0].class_name}</div>
+                                                <div>Grade: B+</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-end gap-2 mt-4">
+                                            <Button variant="outline" size="sm" onClick={() => handleOnView(student.id)}>
+                                                <EyeIcon className="w-4 h-4"
+
+                                                />
+                                                View
+                                            </Button>
+                                            <Button variant="outline" size="sm">
+                                                <FilePenIcon className="w-4 h-4" />
+                                                Edit
+                                            </Button>
+                                            <Button variant="outline" size="sm">
+                                                <TrashIcon className="w-4 h-4" />
+                                                Delete
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </>
+                        )
+                    })
+                }
             </div>
         </div>
     )

@@ -1,4 +1,4 @@
-import { GradeInfo } from "@/models/class";
+import { GradeInfo } from "@/models/class/class";
 import { useState } from "react";
 
 export const UseCreateClassHook = () => {

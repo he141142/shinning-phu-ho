@@ -6,6 +6,7 @@ import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import { AuthProvider } from "@/context/app.context";
 import Laylout from "@/components/layouts";
 import MaterialLayout from "./material_layout";
+import { Toaster } from "@/components/drake_libs/ui/toaster";
 // or `v1X-appRouter` if you are using Next.js v1X
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,19 +18,22 @@ export default function RootLayout({
 }>) {
   return (
     <div>
+          
       <AppRouterCacheProvider>
         <AuthProvider >
           <div className={inter.className}>
             <MaterialLayout>
               <Laylout>
                 {children}
+              
+
               </Laylout>
+         
+
             </MaterialLayout>
           </div>
         </AuthProvider>
-
       </AppRouterCacheProvider>
-
     </div>
   );
 }

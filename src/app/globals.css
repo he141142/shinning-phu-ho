@@ -40,3 +40,18 @@
     @apply font-heading;
   }
 }
+
+
+
+@keyframes bounce2 {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes colorChange {
+  0% { color: red; background-color: #fff; }
+  50% { color: blue; background-color: #f0f0f0; }
+  100% { color: red; background-color: #fff; }
+}
+

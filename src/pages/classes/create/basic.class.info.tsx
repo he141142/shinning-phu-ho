@@ -1,7 +1,7 @@
 import { Input } from "@/components/drake_libs/ui/input";
 import { Label } from "@/components/drake_libs/ui/label";
 import { Select, SelectContent, SelectGroup, SelectLabel, SelectTrigger, SelectValue, SelectItem } from "@/components/drake_libs/ui/select";
-import { GradeInfo } from "@/models/class";
+import { GradeInfo } from "@/models/class/class";
 import { GetGradesInfo } from "@/models/mocks/get_list_classes";
 import { useEffect, useMemo, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/drake_libs/ui/popover";

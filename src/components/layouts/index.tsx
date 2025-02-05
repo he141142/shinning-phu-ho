@@ -8,32 +8,8 @@ import { Input } from "@/components/drake_libs/ui/input"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/drake_libs/ui/avatar"
 import { Separator } from "@/components/drake_libs/ui/separator"
 import Image from "next/image";
-// export default function Laylout({ children }: { children: ReactNode }) {
-//     return (
-//         <>
-//             <NavBar />
-//             <div className="line" style={
-//                 {
-//                     width: "100%",
-//                     height: "4px"
-//                 }
-//             }>
+import { Toaster } from "../drake_libs/ui/toaster";
 
-//             </div>
-//             <div className="flex flex-row gap-4 bg-[#0085FF]">
-//                 <div className="basis-1/5 quick-access">
-//                     <QuickAcess />
-//                 </div>
-//                 <div className="basis-1/2 grow h-[1800px]  ">
-//                     {children}
-//                 </div>
-//             </div>
-
-//             <h1>Home</h1>
-//             <p>Welcome to the home page!</p>
-//         </>
-//     )
-// }
 
 export default function Laylout({ children }: { children: ReactNode }) {
     return (
@@ -126,7 +102,10 @@ export default function Laylout({ children }: { children: ReactNode }) {
                     </nav>
                     <main className="flex-1 overflow-visible">
                         {children}
+                       
+
                     </main>
+                    <Toaster />
                 </div>
             </div>
         </>
