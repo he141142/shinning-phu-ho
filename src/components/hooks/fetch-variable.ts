@@ -40,5 +40,5 @@ export function UseFetchGraphqlWithVariable<T>(endpoint: string, query: string, 
     fetchData();
   }, [endpoint, query, variables]); // Dependencies ensure the hook runs when any of these change
 
-  return { data, loading, error };
+  return { data, loading, error, setLoading, setError };
 }

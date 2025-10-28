@@ -1,4 +1,7 @@
 import { GetClassByIdResponse } from "@/models/class/class.detail";
+import { Grade } from "../GetListStudent/GetListStudent";
+import { Pagination } from "@/models/pagination";
+import { Teacher } from "@/models/class/class";
 
 export interface Center {
   center_id: number;
@@ -31,8 +34,13 @@ export interface GetStudentDetail {
     | "start_date"
   >[];
   center: Center;
+  grade: Grade
 }
 
 export interface GetStudentDetailResponse {
   GetStudentDetail: GetStudentDetail;
+}
+
+export interface ListTeachers {
+  ListTeachers: Pagination<Teacher>;
 }

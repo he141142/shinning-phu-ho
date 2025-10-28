@@ -7,11 +7,13 @@ import { Input } from "@/components/drake_libs/ui/input"
 import { Label } from "@/components/drake_libs/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/drake_libs/ui/select"
 import { Textarea } from "@/components/drake_libs/ui/textarea"
-import { Toast, ToasterToast, useToast } from "@/components/hooks/use-toast"
+import {  useToast } from "@/components/hooks/use-toast"
 import { CalendarIcon, ChevronLeftIcon } from "lucide-react"
 import { format, set } from "date-fns"
 import { Calendar } from "@/components/drake_libs/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/drake_libs/ui/popover"
+import { Toast } from "@/components/drake_libs/ui/toast"
+
 import { UseFetch } from "@/components/hooks/fetch-data"
 import { HOST } from "@/static/env"
 import { ListAllGradesResponse } from "@/models/grades/ListAllGrades"
@@ -69,7 +71,7 @@ export default function AddNewStudentPage() {
     </div>
   );
 
-  const renderSuccessToast = (): Toast => {
+  const renderSuccessToast = () => {
     return {
       title: "Success",
       description: TickToast,
@@ -77,7 +79,7 @@ export default function AddNewStudentPage() {
     }
   };
 
-  const renderFailedToast = (error: string): Toast => {
+   const renderFailedToast = (error: string) => {
     console.log("triggered");
     
     return {

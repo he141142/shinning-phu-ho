@@ -50,8 +50,8 @@ export default function Laylout({ children }: { children: ReactNode }) {
                                 Home
                             </Link>
                             <Link
-                                href="#"
-                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted bg-gray-50 text-gray-400"
+                                href="/materials"
+                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors "
                                 prefetch={false}
                             >
                                 <CompassIcon className="h-5 w-5" />

@@ -4,6 +4,7 @@ import { UserIcon, ActivityIcon, CalendarIcon, SchoolIcon, TimerIcon, FilesIcon,
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { ListTodo } from "lucide-react"
 
 
 type FeatureModel = {
@@ -36,7 +37,7 @@ const FeatureContainer = () => {
                 description: "Organize and manage classes.",
                 icon: <CodeIcon className="w-12 h-12 text-green-500" />,
                 active: true,
-                  link_to: "/classes"
+                link_to: "/classes"
             },
             {
                 title: "Grades",
@@ -46,7 +47,9 @@ const FeatureContainer = () => {
             {
                 title: "Calendars",
                 description: "View and manage academic calendars.",
-                icon: <CalendarIcon className="w-12 h-12 text-red-500" />
+                icon: <CalendarIcon className="w-12 h-12 text-red-500" />,
+                 active: true,
+                link_to: "/calendar"
             },
             {
                 title: "Time Slots",
@@ -61,7 +64,9 @@ const FeatureContainer = () => {
             {
                 title: "Teachers",
                 description: "Manage teacher information and schedules.",
-                icon: <SchoolIcon className="w-12 h-12 text-pink-500" />
+                icon: <SchoolIcon className="w-12 h-12 text-pink-500" />,
+                active: true,
+                link_to: "/teachers?page=1&perPage=6"
             },
             {
                 title: "Semesters",
@@ -72,6 +77,13 @@ const FeatureContainer = () => {
                 title: "Study Materials",
                 description: "Access and manage study materials.",
                 icon: <FilesIcon className="w-12 h-12 text-indigo-500" />
+            },
+            {
+                title: "Request Management",
+                description: "Access and manage study materials.",
+                icon: <ListTodo className="w-12 h-12 text-indigo-500" />,
+                active: true,
+                link_to: "/requests"
             }
         ]);
         setLoading(false);

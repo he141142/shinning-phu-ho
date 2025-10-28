@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { CalendarDays, GraduationCap, Users, UserPlus } from "lucide-react"
+import { CalendarDays, GraduationCap, Users, UserPlus, UserRoundCog } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/drake_libs/ui/avatar"
 import { Badge } from "@/components/drake_libs/ui/badge"
 import { Button } from "@/components/drake_libs/ui/button"
@@ -58,6 +58,12 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
           address
           emergency_contact_name
           emergency_contact_phone
+        }
+        semester{
+            end_date
+            semester_id
+            semester_name
+            start_date
         }
         class_config{
           name
@@ -204,7 +210,7 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
               </div>
               <div className="flex items-center space-x-2">
                 <GraduationCap className="h-4 w-4" />
-                <span className="text-sm">Current Semester: {data?.GetClassById?.current_semester}</span>
+                <span className="text-sm">Current Semester: {data?.GetClassById?.semster?.semester_name || "N/A"}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <CalendarDays className="h-4 w-4" />
@@ -255,9 +261,13 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
                     <CalendarDays className="h-4 w-4" />
                     <span className="text-sm">Start Date: {data?.GetClassById?.start_date}</span>
                   </div>
+                  <div className="flex items-center space-x-2">
+                    <UserRoundCog  className="h-4 w-4" />
+                    <span className="text-sm">Max Enrollment: {data?.GetClassById?.max_students}</span>
+                  </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> 
             <Card>
               <CardHeader>
                 <CardTitle>Upcoming Sessions</CardTitle>

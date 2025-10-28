@@ -39,7 +39,15 @@ type PaginationLinkProps = {
   isActive?: boolean
   disabled?: boolean
 } & Pick<ButtonProps, "size"> &
-  React.ComponentProps<"a">
+  React.ComponentProps<"a">;
+
+
+const renderActive = (isActive: boolean) => {
+  if (isActive) {
+    return "bg-primary-500 text-white shadow-neon-green animate-neon-blink"
+  }
+  return "bg-white text-primary-500"
+}
 
 const PaginationLink = ({
   className,
@@ -53,8 +61,17 @@ const PaginationLink = ({
       buttonVariants({
         variant: isActive ? "outline" : "ghost",
         size,
+        className: cn({ "pointer-events-none": props.disabled, "opacity-50": props.disabled},{
+          [renderActive(isActive||false)]: !props.disabled,
+          "hover:bg-primary-100": !props.disabled,
+          "hover:text-primary-500": !props.disabled,
+          "hover:shadow-neon-red-hover": !props.disabled,
+          "transition duration-300": !props.disabled,
+          "cursor-pointer": !props.disabled,
+        }), 
       }),
-      className
+      className,
+     
     )}
     {...props}
   />

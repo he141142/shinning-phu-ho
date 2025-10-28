@@ -1,7 +1,7 @@
 
-import { ClassDetailComponent } from '@/components/drake_libs/class-detail'
 import { LoadingPage } from '@/components/drake_libs/component/loading-page';
 import { useRouter } from 'next/router'
+import { ClassDetailComponent } from './components/class-detail';
  
 export default function Page() {
   const router = useRouter();

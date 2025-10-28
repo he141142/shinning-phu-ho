@@ -3,7 +3,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 import Link from "next/link"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/drake_libs/ui/card"
 import { Button } from "@/components/drake_libs/ui/button"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { getListClasses } from "@/models/mocks/get_list_classes"
 import { useRouter } from "next/router";
 import { ClassInfo, GetListClassResponse } from "@/models/class/class";
@@ -11,20 +11,32 @@ import { HOST } from "@/static/env";
 import { ErrorPage, LoadingPage } from "./loading-page";
 import { PaginationNav } from "./pagination";
 import { PlusIcon } from "lucide-react";
+import { getTotalPage } from "@/utils/utils";
 
 
 export function ClassManagement() {
-
-
+  const [limit, setLimit] = useState(8);
   const [classes, setClasses] = useState<ClassInfo[]>([]);
+  const [totalItem, setTotalItem] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
+  var page = router.query?.page ? parseInt(router.query.page as string) : 1;
+  const variables = useMemo(() => ({
+    input: {
+      page: router.query?.page ? parseInt(router.query.page as string) : 1,
+      limit: limit,
+      order_by: "class desc",
+      where: {}
+    }
+  }), [page, limit]);
+
+
   useEffect(() => {
     const fetchClasses = async () => {
       setLoading(true);
-      
+
       try {
         const response = await fetch(`${HOST}/query`, {
           method: "POST",
@@ -35,8 +47,8 @@ export function ClassManagement() {
             query: `
               query {
                 GetListClass(input: {
-                  page: 1,
-                  limit: 10,
+                  page: ${variables.input.page},
+                  limit: ${variables.input.limit},
                   order_by: "id desc",
                   where: {}
                 }) {
@@ -70,6 +82,7 @@ export function ClassManagement() {
 
         const data: GetListClassResponse = result.data;
         console.log(data);
+        setTotalItem(data.GetListClass.total);
 
         setClasses(data.GetListClass.data.map((data) => {
           let classInfo: ClassInfo = {
@@ -85,7 +98,7 @@ export function ClassManagement() {
 
       } catch (err: any) {
 
-        
+
         setError(err.message);
       } finally {
         setLoading(false);
@@ -100,6 +113,10 @@ export function ClassManagement() {
       console.log("clicked")
       router.push(`/class_detail/${classID}`)
     }
+  }
+
+  const handlePageChange = async (page: number) => {
+    router.push(`/classes?page=${page}`);
   }
 
   const renderClassComponent = () => {
@@ -122,35 +139,24 @@ export function ClassManagement() {
   }
 
   if (loading) return <LoadingPage />;
-  if (error) return <ErrorPage message="failed to render"/>;
+  if (error) return <ErrorPage message="failed to render" />;
 
   return (
     <div className="flex min-h-screen w-full ">
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-       <div className="flex items-center justify-between mb-6">
-                       <h1 className="text-2xl font-bold">Class Management</h1>
-                       <Button onClick={() => {}} className="flex items-center gap-2">
-                           <PlusIcon className="w-4 h-4" />
-                           Add Class
-                       </Button>
-                   </div>
+      <div className="w-full flex flex-col sm:gap-1 sm:py-4 sm:pl-14">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Class Management</h1>
+          <Button onClick={() => { }} className="flex items-center gap-2">
+            <PlusIcon className="w-4 h-4" />
+            Add Class
+          </Button>
+        </div>
         <main className="grid content-between flex-0 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-4">
           {renderClassComponent()}
-          <Card >
-            <CardHeader>
-              <CardTitle>Physics Lab</CardTitle>
-              <CardDescription>Taught by Emily Wang</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <span>Enrolled: 20</span>
-                <Button size="sm">View Details</Button>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <PaginationNav initialPage={0} totalPages={100}></PaginationNav>
+
         </main>
+        <PaginationNav currentPage={page} totalPages={classes ? getTotalPage(totalItem, limit) : 1} handlePageChange={handlePageChange} />
+
       </div>
     </div>
   )

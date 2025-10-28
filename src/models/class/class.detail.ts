@@ -1,3 +1,4 @@
+import { Semester } from "../semesters/entity";
 import { ClassConfig } from "./class.config";
 import { RoomEntity } from "./room.entity";
 
@@ -44,6 +45,7 @@ export interface GetClassByIdResponse {
   grade: string | null;
   current_semester: string | null;
   start_date: string | null;
+  semester?: Semester;
 }
 
 

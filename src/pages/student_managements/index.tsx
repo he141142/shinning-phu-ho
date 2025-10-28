@@ -4,29 +4,40 @@ import { Button } from "@/components/drake_libs/ui/button"
 import { Card, CardContent } from "@/components/drake_libs/ui/card"
 import { Badge } from "@/components/drake_libs/ui/badge"
 import OnlineStatus from "@/components/common/online"
-import { MouseEvent, MouseEventHandler, useMemo } from "react"
-import { redirect } from 'next/navigation';
-import { useRouter } from 'next/navigation'
-import { UseFetch } from "@/components/hooks/fetch-data"
+import { MouseEvent, MouseEventHandler, useMemo, useState } from "react"
+import { useRouter } from 'next/router'
 import { UseFetchGraphqlWithVariable } from "@/components/hooks/fetch-variable"
 import { HOST } from "@/static/env"
 import { ErrorPage, LoadingPage } from "@/components/drake_libs/component/loading-page"
 import { GetListStudentResponse } from "@/models/students/GetListStudent/GetListStudent"
+import { PaginationNav } from "@/components/drake_libs/component/pagination"
 
 export default function StudentManagements() {
-    const router = useRouter()
-    const onSubmitFunc = (e: MouseEvent<HTMLButtonElement>) => {
-        router.push("/students/create");
-    }
+    const router = useRouter();
+
+    var page = router.query?.page ? parseInt(router.query.page as string) : 1;
+
+    const [limit, setLimit] = useState(8);
 
     const variables = useMemo(() => ({
         input: {
-            page: 1,
-            limit: 100,
+            page: router.query?.page ? parseInt(router.query.page as string) : 1,
+            limit: limit,
             order_by: "class desc",
             where: {}
         }
-    }), []);
+    }), [page, limit]);
+
+
+
+    const onSubmitFunc = (e: MouseEvent<HTMLButtonElement>) => {
+        router.push("/students/create");
+    };
+
+    const getTotalPage = (total_item: number, per_page: number) => {
+        return Math.ceil(total_item / per_page);
+    }
+
 
     const { data, error, loading } = UseFetchGraphqlWithVariable<GetListStudentResponse>(`${HOST}/query`, `
             query getListStudent($input:GetListStudentInput!){
@@ -56,7 +67,12 @@ export default function StudentManagements() {
             }
         `,
         variables
-    )
+    );
+
+    const handlePageChange = async (page: number) => {
+        router.push(`/student_managements?page=${page}`);
+    };
+
 
     if (loading) {
         return <LoadingPage />
@@ -69,8 +85,6 @@ export default function StudentManagements() {
     const handleOnView = (id: number) => {
         router.push(`/student-info/${id}`);
     }
-
-
     return (
         <div className="max-w-100 mx-auto  ">
             <div className="flex items-center justify-between mb-6">
@@ -100,7 +114,7 @@ export default function StudentManagements() {
                                             <div className="flex items-center justify-between mb-2">
                                                 <h2 className="text-lg font-semibold">{`${student.first_name} ${student.last_name}`}</h2>
                                                 <div className="flex items-center gap-2">
-                                                    <Badge>Grade {student.grade?student.grade.grade_name:"-"}</Badge>
+                                                    <Badge>Grade {student.grade ? student.grade.grade_name : "-"}</Badge>
                                                     <Badge variant="secondary">English</Badge>
                                                 </div>
                                             </div>
@@ -132,6 +146,7 @@ export default function StudentManagements() {
                     })
                 }
             </div>
+            <PaginationNav currentPage={page} totalPages={data ? getTotalPage(data.GetListStudent.total,limit) : 1} handlePageChange={handlePageChange} />
         </div>
     )
 }

@@ -18,7 +18,7 @@ export type StudentProfileProps = {
 }
 
 
-const isCenter = (center: any): center is Center => (center as Center).center_id !== undefined;
+const isCenter = (center: any): center is Center => center?  (center as Center).center_id !== undefined: false;
 
 const renderFn = (key: string, value: string | Center | undefined): React.ReactNode => {
   return (
@@ -27,7 +27,7 @@ const renderFn = (key: string, value: string | Center | undefined): React.ReactN
         key === 'center' || typeof value != "string" ?
           (isCenter(value)) ?
             <>
-              <div key={key} className="sm:col-span-1">
+              <div key={key} cxlassName="sm:col-span-1">
                 <dt className="text-sm font-medium text-gray-500">
                   {key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                 </dt>

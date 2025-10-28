@@ -59,6 +59,14 @@ module.exports = {
         sm: `calc(var(--radius) - 4px)`
       },
       keyframes: {
+        neonPulse: {
+          "0%, 100%": { boxShadow: "0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6)" },
+          "50%": { boxShadow: "0 0 15px rgba(255, 255, 255, 1), 0 0 25px rgba(255, 255, 255, 0.8)" },
+        },
+        neonBlink: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.6" },
+        },
         "accordion-down": {
           from: { height: 0 },
           to: { height: "var(--radix-accordion-content-height)" }
@@ -70,7 +78,9 @@ module.exports = {
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out"
+        "accordion-up": "accordion-up 0.2s ease-out",
+        "neon-pulse": "neonPulse 1.5s infinite alternate",
+        "neon-blink": "neonBlink 10s infinite",
       },
       gridColumnStart: {
         '1': '1',
@@ -125,7 +135,24 @@ module.exports = {
 
         // Complex site-specific column configuration
         'footer': '200px minmax(900px, 1fr) 100px',
-      }
+      },
+      boxShadow: {
+        neon: "0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6)",
+        "neon-hover": "0 0 15px rgba(255, 255, 255, 1), 0 0 25px rgba(255, 255, 255, 0.8)",
+        "neon-active": "0 0 20px rgba(255, 255, 255, 1), 0 0 30px rgba(255, 255, 255, 0.9)",
+
+        "neon-red": "0 0 10px rgba(255, 0, 0, 0.8), 0 0 20px rgba(255, 0, 0, 0.6)",
+        "neon-red-hover": "0 0 15px rgba(255, 0, 0, 1), 0 0 25px rgba(255, 0, 0, 0.8)",
+        "neon-red-active": "0 0 20px rgba(255, 0, 0, 1), 0 0 30px rgba(255, 0, 0, 0.9)",
+
+        "neon-blue": "0 0 10px rgba(0, 0, 255, 0.8), 0 0 20px rgba(0, 0, 255, 0.6)",
+        "neon-blue-hover": "0 0 15px rgba(0, 0, 255, 1), 0 0 25px rgba(0, 0, 255, 0.8)",
+        "neon-blue-active": "0 0 20px rgba(0, 0, 255, 1), 0 0 30px rgba(0, 0, 255, 0.9)",
+
+        "neon-green": "0 0 10px rgba(0, 255, 0, 0.8), 0 0 20px rgba(0, 255, 0, 0.6)",
+        "neon-green-hover": "0 0 15px rgba(0, 255, 0, 1), 0 0 25px rgba(0, 255, 0, 0.8)",
+        "neon-green-active": "0 0 20px rgba(0, 255, 0, 1), 0 0 30px rgba(0, 255, 0, 0.9)",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

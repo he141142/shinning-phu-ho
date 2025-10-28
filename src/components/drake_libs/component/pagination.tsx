@@ -1,32 +1,39 @@
 import { useRouter } from "next/router"
 import { PaginationContent, PaginationPrevious, Pagination, PaginationItem, PaginationLink, PaginationNext, PaginationEllipsis } from "../ui/pagination"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
-export function PaginationNav({ initialPage, totalPages }: { initialPage: number, totalPages: number }) {
-
+export function PaginationNav({ currentPage, totalPages, handlePageChange }: { currentPage: number, totalPages: number, handlePageChange: (page: number) => Promise<void> }) {
     const [students, setStudents] = useState(0)
-    const [currentPage, setCurrentPage] = useState(1)
     const [isLoading, setIsLoading] = useState(false)
-    const router = useRouter()
+    const handlePageChange2 = async (page: number) => {
+        if (page < 1 || page > totalPages) {
+            return
+        }
 
-    const handlePageChange = async (page: number) => {
-        setIsLoading(true)
-        router.push(`/students?page=${page}`)
-        // In a real application, you would fetch new data here
-        // For this example, we'll just simulate a delay
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        setCurrentPage(page)
-        setIsLoading(false)
-    }
+        setIsLoading(prev => true);
+        await handlePageChange(page);
+        setIsLoading(prev => false);
+    };
+
+
+    useEffect(() => {
+        return () => {
+            console.log("cleanup");
+            
+        }
+    },[]);
+
+    console.log("currentPage", currentPage);
+    console.log("totalPages", totalPages);
 
     return (
         <>
-            <Pagination className="mt-8">
-                <PaginationContent>
+            <Pagination className="mt-8 ">
+                <PaginationContent >
                     <PaginationItem>
                         <PaginationPrevious
-                            href="#"
-                            onClick={() => handlePageChange(currentPage - 1)}
+                            className="disabled:opacity-50 cursor-pointer animate-out hover:animate-in  transition duration-300  hover:shadow-neon-red-hover"
+                            onClick={() => handlePageChange2(currentPage - 1)}
                             disabled={currentPage === 1 || isLoading}
                         />
                     </PaginationItem>
@@ -34,12 +41,13 @@ export function PaginationNav({ initialPage, totalPages }: { initialPage: number
                         const page = index + 1
                         if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
                             return (
-                                <PaginationItem key={page}>
+                                <PaginationItem key={page} >
+                                    
                                     <PaginationLink
-                                        href="#"
-                                        onClick={() => handlePageChange(page)}
+                                        onClick={() => handlePageChange2(page)}
                                         isActive={page === currentPage}
                                         disabled={isLoading}
+                                        className="transition duration-300"
                                     >
                                         {page}
                                     </PaginationLink>
@@ -53,11 +61,13 @@ export function PaginationNav({ initialPage, totalPages }: { initialPage: number
                         }
                         return null
                     })}
-                    <PaginationItem>
+                    <PaginationItem
+
+                    >
                         <PaginationNext
-                            href="#"
-                            onClick={() => handlePageChange(currentPage + 1)}
                             disabled={currentPage === totalPages || isLoading}
+                            onClick={() => handlePageChange2(currentPage + 1)}
+                            className="disabled:opacity-50 cursor-pointer"
                         />
                     </PaginationItem>
                 </PaginationContent>

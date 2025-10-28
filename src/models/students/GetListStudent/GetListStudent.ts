@@ -18,7 +18,7 @@ export function GetListStudentQuery(): string {
 `;
 }
 
-export type ClassEntity = Pick<GetClassByIdResponse, "class_id" | "class_name">;
+export type ClassEntity = Pick<GetClassByIdResponse, "class_id" | "class_name" | "current_enrollment" | "semester">;
 
 export type GetListStudentQueryVariable = {
   input: {

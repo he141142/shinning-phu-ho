@@ -1,3 +1,5 @@
+import { Semester } from "../semesters/entity";
+
 type ClassInfo = {
   Id: number;
   Name: string;
@@ -18,11 +20,9 @@ type GradeInfo = {
 
 export type { ClassInfo, GradeInfo };
 
-
 export interface GraphQLResponse<T> {
   data: T;
 }
-
 
 // Type for the "GetListClass" response
 export interface GetListClassResponse {
@@ -31,7 +31,6 @@ export interface GetListClassResponse {
     data: Class[];
   };
 }
-
 
 // Type for the "Class" object
 export interface Class {
@@ -46,6 +45,7 @@ export interface Class {
   room_id: number | null;
   schedule: string;
   students: Student[];
+  semster?: Semester;
 }
 
 // Type for a "Student" object (extend as needed)
@@ -64,13 +64,11 @@ export interface OtherEndpointResponse {
   // Define structure for other responses here
 }
 
-
 export interface TimeTable {
   day: string;
   time: string;
   room: string;
 }
-
 
 export interface StudentDetail {
   id: number;
@@ -78,13 +76,12 @@ export interface StudentDetail {
   avatar: string;
 }
 
-
 export interface Teacher {
   name: string;
   avatar: string;
 }
 
-export interface ClassDetailPageData  {
+export interface ClassDetailPageData {
   name: string;
   id: number;
   description: string;
