@@ -1,0 +1,1 @@
+export { useGetAllGrades } from './useGetAllGrades';

@@ -2,110 +2,362 @@ import AppContainers from "@/components/app-containers";
 import NavBar from "@/components/nav_bar";
 import QuickAcess from "@/components/quick-access";
 import "./quic-access.scss"
-import { ReactElement, ReactNode } from "react";
+import { ReactElement, ReactNode, useEffect, useState } from "react";
 import Link from "next/link"
 import { Input } from "@/components/drake_libs/ui/input"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/drake_libs/ui/avatar"
 import { Separator } from "@/components/drake_libs/ui/separator"
 import Image from "next/image";
 import { Toaster } from "../drake_libs/ui/toaster";
+import { Search, Bell, Menu, Sun, Moon } from "lucide-react";
+import { useRouter } from "next/router";
+import { useTheme } from "@/contexts/ThemeContext";
+import ThemeDebug from "@/components/ThemeDebug";
 
 
 export default function Laylout({ children }: { children: ReactNode }) {
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const router = useRouter();
+    const { theme, toggleTheme } = useTheme();
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 20) {
+                setIsScrolled(true);
+            } else {
+                setIsScrolled(false);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // Check if current route is active
+    const isActiveRoute = (path: string) => {
+        return router.pathname === path || router.pathname.startsWith(path);
+    };
+
     return (
         <>
-            <div className="flex min-h-screen w-full flex-col bg-background">
-                <header className="sticky top-0 z-1 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-                    <Link href="#" className="flex items-center gap-2 font-semibold" prefetch={false}>
-                    <Image src={"/images/bjk-letter-logo-design-on-black-background-bjk-creative-initials-letter-logo-concept-bjk-letter-design-vector.jpg"} width={50} height={50} alt="logo" />
-                    <span className="sr-only">YouTube</span>
-                    </Link>
-                    <div className="relative ml-auto flex-1 md:grow-0">
-                        <div className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="search"
-                            placeholder="Search"
-                            className="w-full rounded-full bg-background pl-8 md:w-[200px] lg:w-[336px]"
-                        />
-                    </div>
-                    <Avatar className="w-8 h-8 border">
-                        <AvatarImage src="/placeholder-user.jpg" alt="@shadcn" />
-                        <AvatarFallback>AC</AvatarFallback>
-                    </Avatar>
-                </header>
-                <div className="flex flex-1 overflow-hidden">
-                    <nav className="hidden h-full w-60 flex-col border-r bg-background p-4 sm:flex">
-                        <div className="mb-6 flex items-center gap-2 font-semibold">
-                        <Image src={"/images/bjk-letter-logo-design-on-black-background-bjk-creative-initials-letter-logo-concept-bjk-letter-design-vector.jpg"} width={50} height={50} alt="logo" />
-                        <h1 className="text-2xl self-center text-black">Shining Phu Ho</h1>
+            <div className="flex min-h-screen w-full flex-col bg-background dark:bg-gray-900">
+                {/* Modern Sticky Navbar */}
+                <header className={`sticky top-0 z-50 transition-all duration-300 ${
+                    isScrolled
+                        ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-lg border-b border-gray-200 dark:border-gray-700'
+                        : 'bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800'
+                }`}>
+                    <div className="container mx-auto px-4">
+                        <div className="flex h-16 items-center justify-between gap-4">
+                            {/* Logo Section */}
+                            <div className="flex items-center gap-4">
+                                <button
+                                    className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                                >
+                                    <Menu className="h-5 w-5 dark:text-gray-300" />
+                                </button>
+                                <Link href="/home" className="flex items-center gap-3 group" prefetch={false}>
+                                    <div className="relative">
+                                        <Image
+                                            src={"/images/bjk-letter-logo-design-on-black-background-bjk-creative-initials-letter-logo-concept-bjk-letter-design-vector.jpg"}
+                                            width={40}
+                                            height={40}
+                                            alt="logo"
+                                            className="rounded-lg transition-transform duration-300 group-hover:scale-110"
+                                        />
+                                    </div>
+                                    <span className="hidden md:block text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                                        Shining Phu Ho
+                                    </span>
+                                </Link>
+                            </div>
 
+                            {/* Search Bar */}
+                            <div className="flex-1 max-w-2xl mx-4">
+                                <div className="relative group">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 transition-colors" />
+                                    <Input
+                                        type="search"
+                                        placeholder="Search students, classes, materials..."
+                                        className="w-full rounded-full bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 pl-10 pr-4 py-2 focus:bg-white dark:focus:bg-gray-700 focus:border-indigo-300 dark:focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 transition-all dark:text-gray-200 dark:placeholder-gray-500"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Right Actions */}
+                            <div className="flex items-center gap-3">
+                                {/* Notifications */}
+                                <button className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group">
+                                    <Bell className="h-5 w-5 text-gray-600 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
+                                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                                </button>
+
+                                {/* User Avatar */}
+                                <div className="relative group cursor-pointer">
+                                    <Avatar className="w-9 h-9 border-2 border-gray-200 group-hover:border-indigo-400 transition-all ring-2 ring-transparent group-hover:ring-indigo-100">
+                                        <AvatarImage src="/placeholder-user.jpg" alt="User" />
+                                        <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-semibold">AC</AvatarFallback>
+                                    </Avatar>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex flex-col gap-2">
-                            <Link
-                                href="/home"
-                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground"
-                                prefetch={false}
-                            >
-                                <HomeIcon className="h-5 w-5" />
-                                Home
-                            </Link>
-                            <Link
-                                href="/materials"
-                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors "
-                                prefetch={false}
-                            >
-                                <CompassIcon className="h-5 w-5" />
-                                Explore
-                            </Link>
-                            <Link
-                                href="#"
-                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted bg-gray-50 text-gray-400"
-                                prefetch={false}
-                            >
-                                <ShoppingCartIcon className="h-5 w-5" />
-                                Subscriptions
-                            </Link>
-                            <Separator className="my-2" />
-                            <Link
-                                href="/learning_materials"
-                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground"
-                                prefetch={false}
-                            >
-                                <LibraryIcon className="h-5 w-5" />
-                                Learning Materials
-                            </Link>
-                            <Link
-                                href="/activities_log"
-                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground"
-                                prefetch={false}
-                            >
-                                <CalendarIcon className="h-5 w-5" />
-                                Activies Log
-                            </Link>
-                            <Link
-                                href="#"
-                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted bg-gray-50 text-gray-400"
-                                prefetch={false}
-                            >
-                                <ClockIcon className="h-5 w-5" />
-                                Watch Later
-                            </Link>
-                            <Link
-                                href="#"
-                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted bg-gray-50 text-gray-400"
-                                prefetch={false}
-                            >
-                                <ThumbsUpIcon className="h-5 w-5" />
-                                Liked Videos
-                            </Link>
+                    </div>
+
+                    {/* Progress bar on scroll */}
+                    {isScrolled && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+                    )}
+                </header>
+                <div className="flex flex-1">
+                    {/* Modern Sticky Sidebar Navigation */}
+                    <aside className={`hidden sm:flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl transition-all duration-300 ${
+                        isSidebarCollapsed ? 'w-20' : 'w-72'
+                    } sticky top-16 h-[calc(100vh-4rem)] overflow-hidden shadow-xl dark:shadow-gray-900/50`}>
+
+                        {/* Sidebar Container with Scroll */}
+                        <div className="flex flex-col h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
+
+                            {/* Sidebar Header */}
+                            <div className={`p-6 pb-4 border-b border-gray-200 dark:border-gray-700 ${isSidebarCollapsed ? 'px-4' : ''}`}>
+                                {!isSidebarCollapsed ? (
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative">
+                                                <Image
+                                                    src={"/images/bjk-letter-logo-design-on-black-background-bjk-creative-initials-letter-logo-concept-bjk-letter-design-vector.jpg"}
+                                                    width={45}
+                                                    height={45}
+                                                    alt="logo"
+                                                    className="rounded-xl shadow-md"
+                                                />
+                                                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-pulse"></div>
+                                            </div>
+                                            <div>
+                                                <h1 className="text-base font-bold text-gray-900 dark:text-white">Shining Phu Ho</h1>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Education Platform</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                                            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                        >
+                                            <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                                        className="w-full flex justify-center p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                    >
+                                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Navigation Links */}
+                            <nav className={`flex-1 p-4 ${isSidebarCollapsed ? 'px-2' : ''}`}>
+                                <div className="flex flex-col gap-1">
+                                    {/* Main Navigation */}
+                                    <Link
+                                        href="/home"
+                                        className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all relative overflow-hidden ${
+                                            isActiveRoute('/home')
+                                                ? 'bg-indigo-50 text-indigo-600 shadow-md'
+                                                : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
+                                        } ${isSidebarCollapsed ? 'justify-center px-2' : ''}`}
+                                        prefetch={false}
+                                    >
+                                        <div className={`absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 transition-transform rounded-r-full ${
+                                            isActiveRoute('/home') ? 'scale-y-100' : 'scale-y-0 group-hover:scale-y-100'
+                                        }`}></div>
+                                        <HomeIcon className={`h-5 w-5 transition-colors ${
+                                            isActiveRoute('/home') ? 'text-indigo-600' : 'text-gray-600 group-hover:text-indigo-600'
+                                        }`} />
+                                        {!isSidebarCollapsed && <span>Home</span>}
+                                    </Link>
+
+                                    <Link
+                                        href="/materials"
+                                        className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all relative overflow-hidden ${
+                                            isActiveRoute('/materials')
+                                                ? 'bg-purple-50 text-purple-600 shadow-md'
+                                                : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
+                                        } ${isSidebarCollapsed ? 'justify-center px-2' : ''}`}
+                                        prefetch={false}
+                                    >
+                                        <div className={`absolute left-0 top-0 bottom-0 w-1 bg-purple-600 transition-transform rounded-r-full ${
+                                            isActiveRoute('/materials') ? 'scale-y-100' : 'scale-y-0 group-hover:scale-y-100'
+                                        }`}></div>
+                                        <CompassIcon className={`h-5 w-5 transition-colors ${
+                                            isActiveRoute('/materials') ? 'text-purple-600' : 'text-gray-600 group-hover:text-purple-600'
+                                        }`} />
+                                        {!isSidebarCollapsed && <span>Explore</span>}
+                                    </Link>
+
+                                    <div className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all cursor-not-allowed opacity-50 ${
+                                        isSidebarCollapsed ? 'justify-center px-2' : ''
+                                    }`}>
+                                        <ShoppingCartIcon className="h-5 w-5 text-gray-400" />
+                                        {!isSidebarCollapsed && (
+                                            <>
+                                                <span className="text-gray-400">Subscriptions</span>
+                                                <span className="ml-auto text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">Soon</span>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {!isSidebarCollapsed && <Separator className="my-4" />}
+
+                                    {!isSidebarCollapsed && (
+                                        <div className="mb-2">
+                                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-4">Resources</p>
+                                        </div>
+                                    )}
+
+                                    <Link
+                                        href="/learning_materials"
+                                        className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all relative overflow-hidden ${
+                                            isActiveRoute('/learning_materials')
+                                                ? 'bg-blue-50 text-blue-600 shadow-md'
+                                                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                                        } ${isSidebarCollapsed ? 'justify-center px-2' : ''}`}
+                                        prefetch={false}
+                                    >
+                                        <div className={`absolute left-0 top-0 bottom-0 w-1 bg-blue-600 transition-transform rounded-r-full ${
+                                            isActiveRoute('/learning_materials') ? 'scale-y-100' : 'scale-y-0 group-hover:scale-y-100'
+                                        }`}></div>
+                                        <LibraryIcon className={`h-5 w-5 transition-colors ${
+                                            isActiveRoute('/learning_materials') ? 'text-blue-600' : 'text-gray-600 group-hover:text-blue-600'
+                                        }`} />
+                                        {!isSidebarCollapsed && <span>Learning Materials</span>}
+                                    </Link>
+
+                                    <Link
+                                        href="/activities_log"
+                                        className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all relative overflow-hidden ${
+                                            isActiveRoute('/activities_log')
+                                                ? 'bg-green-50 text-green-600 shadow-md'
+                                                : 'text-gray-700 hover:bg-green-50 hover:text-green-600'
+                                        } ${isSidebarCollapsed ? 'justify-center px-2' : ''}`}
+                                        prefetch={false}
+                                    >
+                                        <div className={`absolute left-0 top-0 bottom-0 w-1 bg-green-600 transition-transform rounded-r-full ${
+                                            isActiveRoute('/activities_log') ? 'scale-y-100' : 'scale-y-0 group-hover:scale-y-100'
+                                        }`}></div>
+                                        <CalendarIcon className={`h-5 w-5 transition-colors ${
+                                            isActiveRoute('/activities_log') ? 'text-green-600' : 'text-gray-600 group-hover:text-green-600'
+                                        }`} />
+                                        {!isSidebarCollapsed && <span>Activities Log</span>}
+                                    </Link>
+
+                                    <div className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all cursor-not-allowed opacity-50 ${
+                                        isSidebarCollapsed ? 'justify-center px-2' : ''
+                                    }`}>
+                                        <ClockIcon className="h-5 w-5 text-gray-400" />
+                                        {!isSidebarCollapsed && (
+                                            <>
+                                                <span className="text-gray-400">Watch Later</span>
+                                                <span className="ml-auto text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">Soon</span>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <div className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all cursor-not-allowed opacity-50 ${
+                                        isSidebarCollapsed ? 'justify-center px-2' : ''
+                                    }`}>
+                                        <ThumbsUpIcon className="h-5 w-5 text-gray-400" />
+                                        {!isSidebarCollapsed && (
+                                            <>
+                                                <span className="text-gray-400">Liked Videos</span>
+                                                <span className="ml-auto text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">Soon</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </nav>
+
+                            {/* Theme Toggle Section */}
+                            <div className={`p-4 border-t border-gray-200 dark:border-gray-700 ${isSidebarCollapsed ? 'px-2' : ''}`}>
+                                {!isSidebarCollapsed ? (
+                                    <div className="space-y-2">
+                                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-2 mb-3">
+                                            Appearance
+                                        </p>
+                                        <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+                                            <button
+                                                onClick={() => theme === 'dark' && toggleTheme()}
+                                                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                                    theme === 'light'
+                                                        ? 'bg-white text-gray-900 shadow-md'
+                                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                                }`}
+                                            >
+                                                <Sun className="w-4 h-4" />
+                                                <span>Light</span>
+                                            </button>
+                                            <button
+                                                onClick={() => theme === 'light' && toggleTheme()}
+                                                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                                    theme === 'dark'
+                                                        ? 'bg-gray-700 text-white shadow-md'
+                                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                                }`}
+                                            >
+                                                <Moon className="w-4 h-4" />
+                                                <span>Dark</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={toggleTheme}
+                                        className="w-full flex justify-center p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group"
+                                        title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+                                    >
+                                        {theme === 'light' ? (
+                                            <Sun className="w-5 h-5 text-gray-600 group-hover:text-amber-500 transition-colors" />
+                                        ) : (
+                                            <Moon className="w-5 h-5 text-gray-400 group-hover:text-indigo-400 transition-colors" />
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Sidebar Footer */}
+                            {!isSidebarCollapsed && (
+                                <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
+                                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-indigo-100 dark:border-indigo-800 shadow-sm">
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Need Help?</p>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">Check our documentation</p>
+                                        <button className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 text-sm font-medium rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700 transition-all hover:shadow-md border border-indigo-200 dark:border-indigo-700">
+                                            Get Support
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </nav>
+
+                        {/* Collapsed state tooltip indicator */}
+                        {isSidebarCollapsed && (
+                            <div className="absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2">
+                                <div className="w-1 h-16 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full shadow-lg"></div>
+                            </div>
+                        )}
+                    </aside>
                     <main className="flex-1 overflow-visible">
                         {children}
                        
 
                     </main>
                     <Toaster />
+                    <ThemeDebug />
                 </div>
             </div>
         </>

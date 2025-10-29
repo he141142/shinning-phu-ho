@@ -122,15 +122,46 @@ export function ClassManagement() {
   const renderClassComponent = () => {
     return classes.map((classInfo) => {
       return (
-        <Card key={classInfo.Id}>
-          <CardHeader>
-            <CardTitle>{classInfo.Name}</CardTitle>
-            <CardDescription>Taught by {classInfo.Teacher}</CardDescription>
+        <Card
+          key={classInfo.Id}
+          className="group hover:shadow-xl transition-all duration-300 border-gray-200 hover:border-blue-300 cursor-pointer"
+          onClick={handleClassOnClick(classInfo.Id)}
+        >
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <CardTitle className="text-xl font-bold group-hover:text-blue-600 transition-colors line-clamp-1">
+                  {classInfo.Name}
+                </CardTitle>
+                <CardDescription className="mt-2 flex items-center gap-2">
+                  <UsersIcon className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm">Taught by {classInfo.Teacher}</span>
+                </CardDescription>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center group-hover:from-blue-200 group-hover:to-cyan-200 transition-all">
+                <BookIcon className="w-5 h-5 text-blue-600" />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <span>Enrolled: {classInfo.Enrolled}</span>
-              <Button size="sm" onClick={handleClassOnClick(classInfo.Id)}>View Details</Button>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group-hover:bg-blue-50 transition-colors">
+                <div className="flex items-center gap-2">
+                  <UsersIcon className="w-4 h-4 text-gray-500 group-hover:text-blue-600" />
+                  <span className="text-sm font-medium text-gray-700">Enrolled</span>
+                </div>
+                <span className="text-lg font-bold text-blue-600">{classInfo.Enrolled}</span>
+              </div>
+              <Button
+                size="sm"
+                className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClassOnClick(classInfo.Id)();
+                }}
+              >
+                View Details
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -142,21 +173,49 @@ export function ClassManagement() {
   if (error) return <ErrorPage message="failed to render" />;
 
   return (
-    <div className="flex min-h-screen w-full ">
-      <div className="w-full flex flex-col sm:gap-1 sm:py-4 sm:pl-14">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Class Management</h1>
-          <Button onClick={() => { }} className="flex items-center gap-2">
-            <PlusIcon className="w-4 h-4" />
-            Add Class
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                  <BookIcon className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                    Class Management
+                  </h1>
+                  <p className="text-gray-600 mt-1">
+                    Manage and organize all your classes
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => router.push('/classes/create')}
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-md hover:shadow-lg transition-all"
+              >
+                <PlusIcon className="w-4 h-4 mr-2" />
+                Add New Class
+              </Button>
+            </div>
+          </div>
         </div>
-        <main className="grid content-between flex-0 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-4">
+
+        {/* Classes Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
           {renderClassComponent()}
+        </div>
 
-        </main>
-        <PaginationNav currentPage={page} totalPages={classes ? getTotalPage(totalItem, limit) : 1} handlePageChange={handlePageChange} />
-
+        {/* Pagination */}
+        <div className="flex justify-center">
+          <PaginationNav
+            currentPage={page}
+            totalPages={classes ? getTotalPage(totalItem, limit) : 1}
+            handlePageChange={handlePageChange}
+          />
+        </div>
       </div>
     </div>
   )

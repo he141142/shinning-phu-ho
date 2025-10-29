@@ -4,7 +4,7 @@ import { UserIcon, ActivityIcon, CalendarIcon, SchoolIcon, TimerIcon, FilesIcon,
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ListTodo } from "lucide-react"
+import { ListTodo, ClipboardCheck } from "lucide-react"
 
 
 type FeatureModel = {
@@ -84,35 +84,88 @@ const FeatureContainer = () => {
                 icon: <ListTodo className="w-12 h-12 text-indigo-500" />,
                 active: true,
                 link_to: "/requests"
+            },
+            {
+                title: "Attendance",
+                description: "Track and manage student attendance records.",
+                icon: <ClipboardCheck className="w-12 h-12 text-emerald-500" />,
+                active: true,
+                link_to: "/attendance/overview"
             }
         ]);
         setLoading(false);
     }, []);
 
-    let animateClass = `group transition ease-in-out delay-50 hover:-translate-y-1 hover:scale-110 hover:bg-indigo-500 duration-300`;
+    let animateClass = `group relative overflow-hidden transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-500/20`;
 
     return (
         <>
-            {loading ? <div>Loading...</div> : (
+            {loading ? (
+                <div className="flex items-center justify-center col-span-full py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                </div>
+            ) : (
                 <>
                     {features.map((feature, index) => (
+                        <Link
+                            href={feature.link_to || ''}
+                            className={`z-30 ${!feature.active ? 'pointer-events-none' : ''}`}
+                            key={index}
+                        >
+                            <Card className={`relative cursor-pointer h-full bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg ${feature.active ? animateClass : 'opacity-60'}`}>
+                                {/* Active indicator stripe */}
+                                {feature.active && (
+                                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+                                )}
 
-                        <Link href={feature.link_to || ''} className="z-30">
-                            <Card className={`relative cursor-pointer  ${feature.active ? animateClass : ''}`} key={index}>
+                                {/* Hover gradient overlay */}
+                                {feature.active && (
+                                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-purple-500/0 to-blue-500/0 group-hover:from-indigo-500/10 group-hover:via-purple-500/10 group-hover:to-blue-500/10 transition-all duration-500 rounded-lg"></div>
+                                )}
+
+                                {/* Coming soon overlay */}
                                 {!feature.active && (
-                                    <>
-                                        <div className="overlay absolute top-0 left-0 w-full h-full bg-black opacity-50"></div>
-                                        <div className="neon-text absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-2xl">
-                                            Available Soon
+                                    <div className="absolute inset-0 bg-gradient-to-br from-gray-900/60 to-gray-800/60 backdrop-blur-sm z-10 rounded-lg flex items-center justify-center">
+                                        <div className="text-center">
+                                            <div className="inline-block px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-2">
+                                                <span className="text-white font-semibold text-sm">🚀 Coming Soon</span>
+                                            </div>
+                                            <p className="text-white/80 text-xs">Feature in development</p>
                                         </div>
-                                    </>
-                                )}                            <CardHeader>
-                                    <CardTitle className="transition ease-in-out delay-50 duration-300 group-hover:text-white" >{feature.title}</CardTitle>
-                                    <CardDescription className="transition ease-in-out delay-50 duration-300 group-hover:text-white">{feature.description}</CardDescription>
-                                </CardHeader>
-                                <CardContent className="transition ease-in-out delay-50 duration-300 group-hover:text-white">
-                                    {feature.icon}
-                                </CardContent>
+                                    </div>
+                                )}
+
+                                <div className="relative z-20">
+                                    <CardHeader className="pb-4">
+                                        <div className="mb-4 transform transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+                                            {feature.icon}
+                                        </div>
+                                        <CardTitle className="text-xl font-bold text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
+                                            {feature.title}
+                                        </CardTitle>
+                                        <CardDescription className="text-gray-600 mt-2 group-hover:text-gray-700 transition-colors duration-300">
+                                            {feature.description}
+                                        </CardDescription>
+                                    </CardHeader>
+
+                                    {feature.active && (
+                                        <CardContent className="pt-0">
+                                            <div className="flex items-center text-sm text-indigo-600 font-medium group-hover:text-indigo-700 transition-all duration-300">
+                                                <span>Explore</span>
+                                                <svg className="w-4 h-4 ml-1 transform transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </div>
+                                        </CardContent>
+                                    )}
+                                </div>
+
+                                {/* Corner decoration */}
+                                {feature.active && (
+                                    <div className="absolute top-2 right-2 w-16 h-16 opacity-0 group-hover:opacity-10 transition-opacity duration-500">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full blur-xl"></div>
+                                    </div>
+                                )}
                             </Card>
                         </Link>
                     ))}

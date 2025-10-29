@@ -101,51 +101,82 @@ const ClassInfoPage = (props: {
 
     return (
         <div>
-            <form >
-                <div className="grid grid-cols-12 grid-flow-row gap-4 grid-rows-8">
-                    <div className="col-span-4">
-                        <CustomInput
-                            id="class-name"
-                            name="class-name"
-                            label="Class Name"
-                            type="text"
-                            OnChange={handleClassNameChange}
-                        />
+            <form className="space-y-8">
+                {/* Section: Basic Information */}
+                <div>
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <span className="text-blue-600 font-semibold text-sm">1</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
                     </div>
-                    <div className="col-span-4">
-                        <CustomDropDown
-                            Render={renderFn} Id={"grade-tmp"} PlaceHolder={"Select Grade"}
-                            LabelMetadata={{ Display: "Grade", Key: "grade-tmp" }}
-                            ElmProps={{ ClassName: "w-full", Id: "grade-tmp" }}
-                            SelectItemFn={selectItemFn}
-                        />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <CustomInput
+                                id="class-name"
+                                name="class-name"
+                                label="Class Name"
+                                type="text"
+                                OnChange={handleClassNameChange}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <CustomDropDown
+                                Render={renderFn}
+                                Id={"grade-tmp"}
+                                PlaceHolder={"Select Grade"}
+                                LabelMetadata={{ Display: "Grade", Key: "grade-tmp" }}
+                                ElmProps={{ ClassName: "w-full", Id: "grade-tmp" }}
+                                SelectItemFn={selectItemFn}
+                            />
+                        </div>
                     </div>
-                    <div className="row-start-2 col-span-4">
-                        <ShiDateTimePicker Display="Start Date" OnSelect={setStartDate} />
-                    </div>
-                    <div className="row-start-2 col-span-4">
-                        <ShiDateTimePicker Display="End Date" OnSelect={setEndDate} />
-                    </div>
-                    <div className="row-start-3 row-span-4 col-start-1 col-span-4 pb-4">
-                        <CustomTextArea BasicElementProps={{
-                            Id: "class-description",
-                            ClassName: "border-2 border-gray-300 w-full h-[150px] p-2",
-                        }}
-                            LabelMetadata={
-                                {
-                                    Display: "Class Description",
-                                    Key: "class-description",
-                                }
-                            }
+                </div>
 
+                {/* Section: Schedule */}
+                <div>
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-8 h-8 rounded-lg bg-cyan-100 flex items-center justify-center">
+                            <span className="text-cyan-600 font-semibold text-sm">2</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Schedule</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <ShiDateTimePicker Display="Start Date" OnSelect={setStartDate} />
+                        </div>
+                        <div className="space-y-2">
+                            <ShiDateTimePicker Display="End Date" OnSelect={setEndDate} />
+                        </div>
+                    </div>
+                </div>
 
+                {/* Section: Description */}
+                <div>
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                            <span className="text-green-600 font-semibold text-sm">3</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Description</h3>
+                    </div>
+                    <div className="space-y-2">
+                        <CustomTextArea
+                            BasicElementProps={{
+                                Id: "class-description",
+                                ClassName: "border-2 border-gray-300 w-full h-[150px] p-3 rounded-lg focus:border-blue-500 focus:ring-blue-500 transition-colors",
+                            }}
+                            LabelMetadata={{
+                                Display: "Class Description",
+                                Key: "class-description",
+                            }}
                             resize={false}
-
                         />
                     </div>
-                    <div className="mt-3 row-start-5 col-start-1">
-                        <MyCustomButton DisplayText="Next" />
-                    </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+                    <MyCustomButton DisplayText="Save & Continue" />
                 </div>
             </form>
         </div>
