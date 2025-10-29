@@ -22,6 +22,6 @@ export default function MyApp({ Component, pageProps }: AppPropsWithLayout) {
       <ReactQueryProvider>
         {getLayout(<Component {...pageProps} />)}
       </ReactQueryProvider>
-    </ThemeProvider>
+     </ThemeProvider>
   )
 }

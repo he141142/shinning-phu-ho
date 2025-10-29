@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import type { NextPageWithLayout } from './_app'
-import RootLayout from '@/app/layout'
+import RootLayout from '@/appeewrwer/layout'
 import "./globals.css"
 import { HomePage } from '@/components/drake_libs/component/home-page'
  

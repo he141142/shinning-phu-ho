@@ -1,6 +1,4 @@
-import AppContainers from "@/components/app-containers";
-import NavBar from "@/components/nav_bar";
-import QuickAcess from "@/components/quick-access";
+
 import "./quic-access.scss"
 import { ReactElement, ReactNode, useEffect, useState } from "react";
 import Link from "next/link"
