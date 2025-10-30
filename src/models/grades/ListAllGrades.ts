@@ -1,7 +1,8 @@
-import { Grade } from "../students/GetListStudent/GetListStudent";
-
-
+export interface Grade {
+  grade_id: number;
+  grade_name: string;
+}
 
 export interface ListAllGradesResponse {
-    ListAllGrades: Grade[]
+  ListAllGrades: Grade[];
 }

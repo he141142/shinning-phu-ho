@@ -16,6 +16,10 @@ import { CustomTextArea } from "@/components/custom/custom.text-area";
 import { UseCreateClassHook } from "@/hooks/create.class.hook";
 import { MyCustomButton } from "@/components/custom/custom.button";
 import { OnSelect, OnSelectCb } from ".";
+import { CreateClassConfirmModal } from "@/components/classes/CreateClassConfirmModal";
+import { useRouter } from "next/navigation";
+import type { CreateClassInput } from "@/models/class/CreateClass";
+import { SemesterSelector } from "@/components/classes/SemesterSelector";
 
 
 
@@ -26,13 +30,16 @@ type SelectItemFn = (item: SelectItemMetadata) => void;
 const ClassInfoPage = (props: {
     OnSelect: OnSelect | undefined;
 }) => {
-
+    const router = useRouter();
     const { GradeBySelectItem, setClassName, setGrades, classNameDispl } = UseCreateClassHook();
 
     const [loadClass, setIsLoadClass] = useState<boolean>(false);
     const [selectedGrade, setSelectedGrade] = useState<GradeInfo | null>(null);
     const [startDate, setStartDate] = useState<Date>();
     const [endDate, setEndDate] = useState<Date>();
+    const [description, setDescription] = useState<string>("");
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    const [selectedSemesterId, setSelectedSemesterId] = useState<number | null>(null);
 
     const [popup, setPopup] = useState({
         open: false,
@@ -71,12 +78,39 @@ const ClassInfoPage = (props: {
         setClassName(value);
     };
 
+    const handleDescriptionChange = (value: string) => {
+        setDescription(value);
+    };
+
     const selectItemFn: SelectItemFn = (item: SelectItemMetadata) => {
         let grade = GradeBySelectItem.get(item.Key);
         if (grade) {
             setSelectedGrade(grade);
         }
     }
+
+    const handleSaveClick = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+    };
+
+    const handleSuccess = () => {
+        router.push("/classes");
+    };
+
+    const getClassData = (): CreateClassInput => {
+        return {
+            class_name: classNameDispl,
+            description: description || undefined,
+            grade_id: selectedGrade?.Id || undefined,
+            start_date: startDate?.toISOString() || undefined,
+            end_date: endDate?.toISOString() || undefined,
+            semester_id: selectedSemesterId || undefined,
+        };
+    };
 
     const renderFn: RenderItems = () => {
         let placeHolder: GradeInfo[] = [];
@@ -149,6 +183,14 @@ const ClassInfoPage = (props: {
                             <ShiDateTimePicker Display="End Date" OnSelect={setEndDate} />
                         </div>
                     </div>
+
+                    {/* Semester Selector with lazy loading */}
+                    <SemesterSelector
+                        startDate={startDate}
+                        endDate={endDate}
+                        selectedSemesterId={selectedSemesterId}
+                        onSelectSemester={setSelectedSemesterId}
+                    />
                 </div>
 
                 {/* Section: Description */}
@@ -170,15 +212,29 @@ const ClassInfoPage = (props: {
                                 Key: "class-description",
                             }}
                             resize={false}
+                            OnChange={handleDescriptionChange}
                         />
                     </div>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
-                    <MyCustomButton DisplayText="Save & Continue" />
+                    <Button
+                        type="button"
+                        onClick={handleSaveClick}
+                        className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-md hover:shadow-lg transition-all px-8"
+                    >
+                        Save & Continue
+                    </Button>
                 </div>
             </form>
+
+            <CreateClassConfirmModal
+                open={isModalOpen}
+                onClose={handleModalClose}
+                classData={getClassData()}
+                onSuccess={handleSuccess}
+            />
         </div>
     )
 }

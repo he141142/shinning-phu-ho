@@ -7,19 +7,20 @@ const LIST_TEACHERS_QUERY = gql`
       total
       data {
         teacher_id
-        name
+        first_name
+        last_name
         email
-        phone
         address
         classes {
           class_id
           class_name
+          current_enrollment
         }
         center {
           center_id
           center_name
         }
-        user {
+        user_account {
           user_id
           username
         }

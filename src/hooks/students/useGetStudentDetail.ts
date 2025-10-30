@@ -2,8 +2,8 @@ import { useGraphQLQuery, gql } from '@/lib/graphql';
 import type { GetStudentDetail } from '@/models/students/GetStudentDetail/GetStudentDetail';
 
 const GET_STUDENT_DETAIL_QUERY = gql`
-  query GetStudentDetail($id: Int!) {
-    GetStudentDetail(id: $id) {
+  query GetStudentDetail($student_id: Int!) {
+    GetStudentDetail(student_id: $student_id) {
       id
       first_name
       last_name
@@ -13,7 +13,6 @@ const GET_STUDENT_DETAIL_QUERY = gql`
       phone
       emergency_contact_name
       emergency_contact_phone
-      gender
       classes {
         class_id
         class_name
@@ -40,7 +39,7 @@ export function useGetStudentDetail(studentId: number) {
   return useGraphQLQuery<{ GetStudentDetail: GetStudentDetail }>(
     ['student', studentId],
     GET_STUDENT_DETAIL_QUERY,
-    { id: studentId },
+    { student_id: studentId },
     {
       enabled: !!studentId && studentId > 0,
       // Student details don't change often

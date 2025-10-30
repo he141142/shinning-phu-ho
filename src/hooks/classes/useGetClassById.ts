@@ -2,14 +2,13 @@ import { useGraphQLQuery, gql } from '@/lib/graphql';
 import type { GetClassByIdResponse } from '@/models/class/class.detail';
 
 const GET_CLASS_BY_ID_QUERY = gql`
-  query GetClassById($class_id: Int!) {
-    GetClassById(class_id: $class_id) {
+  query GetClassById($class_id: GetClassByIdInput!) {
+    GetClassById(input: $class_id) {
       class_id
       class_name
       description
       start_date
       end_date
-      status
       students {
         id
         first_name
@@ -28,12 +27,13 @@ const GET_CLASS_BY_ID_QUERY = gql`
         end_date
       }
       class_config {
-        max_students
-        min_students
+        name
+        description
+        is_enable
       }
       room {
         room_id
-        room_name
+        room_number
         capacity
         center {
           center_id
@@ -43,9 +43,10 @@ const GET_CLASS_BY_ID_QUERY = gql`
       }
       teacher {
         teacher_id
-        name
+        first_name
+        last_name
         email
-        phone
+        phone_number
       }
     }
   }
@@ -53,18 +54,35 @@ const GET_CLASS_BY_ID_QUERY = gql`
 
 /**
  * Hook to fetch detailed information for a single class
+ * Note: Grade data is mocked at class level until backend supports it
  *
  * @example
  * const { data, isLoading, error } = useGetClassById(456);
  */
 export function useGetClassById(classId: number) {
-  return useGraphQLQuery<GetClassByIdResponse>(
+  const result = useGraphQLQuery<{ GetClassById: GetClassByIdResponse }>(
     ['class', classId],
     GET_CLASS_BY_ID_QUERY,
-    { class_id: classId },
+    { class_id: { class_id: classId } },
     {
       enabled: !!classId && classId > 0,
       staleTime: 5 * 60 * 1000,
     }
   );
+
+  // Mock grade data injection - will be replaced when backend supports grade on class level
+  if (result.data?.GetClassById) {
+    return {
+      ...result,
+      data: {
+        GetClassById: {
+          ...result.data.GetClassById,
+          grade: "Grade 10", // Mock grade name
+          grade_id: 10 // Mock grade ID
+        }
+      }
+    };
+  }
+
+  return result;
 }

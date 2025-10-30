@@ -12,6 +12,30 @@ import { CalendarIcon, ChevronLeftIcon } from "lucide-react"
 import { format } from "date-fns"
 import { Calendar } from "@/components/drake_libs/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/drake_libs/ui/popover"
+import { useGetAllGrades } from "@/hooks/grades"
+
+function GradeSelector() {
+  const { data: gradesData, isLoading } = useGetAllGrades();
+  const grades = gradesData?.ListAllGrades || [];
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="gradeClass">Grade Class</Label>
+      <Select disabled={isLoading}>
+        <SelectTrigger>
+          <SelectValue placeholder={isLoading ? "Loading grades..." : "Select grade class"} />
+        </SelectTrigger>
+        <SelectContent>
+          {grades.map((grade) => (
+            <SelectItem key={grade.grade_id} value={`${grade.grade_id}`}>
+              {grade.grade_name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 export function AddNewStudentPage() {
   const { toast } = useToast()
@@ -86,21 +110,7 @@ export function AddNewStudentPage() {
                   </Select>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="gradeClass">Grade Class</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select grade class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[9, 10, 11, 12].map((grade) => (
-                      <SelectItem key={grade} value={`${grade}`}>
-                        Grade {grade}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <GradeSelector />
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <Input id="email" type="email" placeholder="student@example.com" required />

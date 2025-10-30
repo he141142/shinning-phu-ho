@@ -11,14 +11,29 @@ import { Search, Bell, Menu, Sun, Moon } from "lucide-react";
 import { useRouter } from "next/router";
 import { useTheme } from "@/contexts/ThemeContext";
 import ThemeDebug from "@/components/ThemeDebug";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
+import { useNotifications } from "@/hooks/notifications/useNotifications";
 
 
 export default function Laylout({ children }: { children: ReactNode }) {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const router = useRouter();
     const { theme, toggleTheme } = useTheme();
+
+    // Notification hook
+    const {
+        notifications,
+        unreadCount,
+        hasMore,
+        isLoading,
+        loadMore,
+        markAsRead,
+        markAllAsRead,
+        deleteNotification,
+    } = useNotifications();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -88,14 +103,28 @@ export default function Laylout({ children }: { children: ReactNode }) {
                             {/* Right Actions */}
                             <div className="flex items-center gap-3">
                                 {/* Notifications */}
-                                <button className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group">
-                                    <Bell className="h-5 w-5 text-gray-600 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
-                                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                                <button
+                                    onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                                    className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group"
+                                >
+                                    <Bell className={`h-5 w-5 transition-all ${
+                                        isNotificationOpen
+                                            ? 'text-indigo-600 dark:text-indigo-400 scale-110'
+                                            : 'text-gray-600 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
+                                    }`} />
+                                    {unreadCount > 0 && (
+                                        <>
+                                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-lg">
+                                                {unreadCount > 99 ? '99+' : unreadCount}
+                                            </span>
+                                        </>
+                                    )}
                                 </button>
 
                                 {/* User Avatar */}
                                 <div className="relative group cursor-pointer">
-                                    <Avatar className="w-9 h-9 border-2 border-gray-200 group-hover:border-indigo-400 transition-all ring-2 ring-transparent group-hover:ring-indigo-100">
+                                    <Avatar className="w-9 h-9 border-2 border-gray-200 dark:border-gray-700 group-hover:border-indigo-400 transition-all ring-2 ring-transparent group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900">
                                         <AvatarImage src="/placeholder-user.jpg" alt="User" />
                                         <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-semibold">AC</AvatarFallback>
                                     </Avatar>
@@ -108,6 +137,20 @@ export default function Laylout({ children }: { children: ReactNode }) {
                     {isScrolled && (
                         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
                     )}
+
+                    {/* Notification Dropdown */}
+                    <NotificationDropdown
+                        isOpen={isNotificationOpen}
+                        onClose={() => setIsNotificationOpen(false)}
+                        notifications={notifications}
+                        unreadCount={unreadCount}
+                        hasMore={hasMore}
+                        isLoading={isLoading}
+                        onLoadMore={loadMore}
+                        onMarkAsRead={markAsRead}
+                        onMarkAllAsRead={markAllAsRead}
+                        onDelete={deleteNotification}
+                    />
                 </header>
                 <div className="flex flex-1">
                     {/* Modern Sticky Sidebar Navigation */}

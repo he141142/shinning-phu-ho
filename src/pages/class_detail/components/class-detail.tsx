@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { CalendarDays, GraduationCap, Users, UserPlus, UserRoundCog, ClipboardCheck } from "lucide-react"
+import { CalendarDays, GraduationCap, Users, UserPlus, UserRoundCog, ClipboardCheck, Edit, Save, X } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/drake_libs/ui/avatar"
 import { Badge } from "@/components/drake_libs/ui/badge"
 import { Button } from "@/components/drake_libs/ui/button"
@@ -32,6 +32,15 @@ import { ErrorPage, LoadingPage } from "@/components/drake_libs/component/loadin
 import { Input } from "@/components/drake_libs/ui/input";
 import { motion } from "framer-motion"
 import { useRouter } from "next/router"
+import { TeacherSelectionModal } from "@/components/classes/TeacherSelectionModal"
+import { useUpdateClass } from "@/hooks/classes"
+import { useGetListSemesters } from "@/hooks/semesters"
+import { useGetAllGrades } from "@/hooks/grades"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/drake_libs/ui/select"
+import { useToast } from "@/components/hooks/use-toast"
+import { RenderSuccessToast, RenderFailedToast } from "@/components/drake_libs/customs/custom-toast"
+import { SemesterSelector } from "@/components/classes/SemesterSelector"
+import { ShiDateTimePicker } from "@/components/custom/custome.datetime-picker"
 
 export function ClassDetailComponent({ slug }: { slug: string }) {
     const [activeTab, setActiveTab] = useState("details")
@@ -39,7 +48,23 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
     const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
     const [config, setConfig] = useState<Record<string, boolean>>({});
     const router = useRouter();
-    const { data, error, loading } = UseFetch<GetClassById>(`${HOST}/query`, `
+    const { toast } = useToast();
+
+    // Edit mode states
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
+    const [editedClassName, setEditedClassName] = useState("");
+    const [editedTeacherId, setEditedTeacherId] = useState<number | null>(null);
+    const [editedSemesterId, setEditedSemesterId] = useState<number | null>(null);
+    const [editedGradeId, setEditedGradeId] = useState<number | null>(null);
+    const [editedStartDate, setEditedStartDate] = useState<Date | undefined>();
+    const [editedEndDate, setEditedEndDate] = useState<Date | undefined>();
+
+    // Hooks for data
+    const { mutate: updateClass, isPending: isUpdating } = useUpdateClass();
+    const { data: semestersData } = useGetListSemesters({ page: 1, limit: 100 });
+    const { data: gradesData } = useGetAllGrades({ page: 1, limit: 100 });
+    const { data: rawData, error, loading } = UseFetch<GetClassById>(`${HOST}/query`, `
     query{
       GetClassById(input:{
         class_id: ${slug}
@@ -47,6 +72,8 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
         class_id
         class_name
         description
+        start_date
+        end_date
         students{
           id
           first_name
@@ -57,6 +84,10 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
           address
           emergency_contact_name
           emergency_contact_phone
+          grade {
+            grade_id
+            grade_name
+          }
         }
         semester{
             end_date
@@ -97,6 +128,15 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
       }
     }
     `)
+
+    // Mock grade data injection - will be replaced when backend supports grade on class level
+    const data = rawData ? {
+        GetClassById: {
+            ...rawData.GetClassById,
+            grade: "Grade 10", // Mock grade name
+            grade_id: 10 // Mock grade ID
+        }
+    } : rawData;
 
     // TODO: Fetch timetable data from the server
     const fetchTimeTable = (): TimeTable[] => {
@@ -163,9 +203,91 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
             });
 
             setConfig(cfg);
-            console.log(cfg);
+
+            // Initialize edit mode values
+            setEditedClassName(data.GetClassById?.class_name || "");
+            setEditedTeacherId(data.GetClassById?.teacher?.teacher_id || null);
+            setEditedSemesterId(data.GetClassById?.semester?.semester_id || null);
+            setEditedGradeId(data.GetClassById?.grade_id || null);
+            setEditedStartDate(data.GetClassById?.start_date ? new Date(data.GetClassById.start_date) : undefined);
+            setEditedEndDate(data.GetClassById?.end_date ? new Date(data.GetClassById.end_date) : undefined);
         }
     }, [data]);
+
+    const handleEnterEditMode = () => {
+        setIsEditMode(true);
+        setEditedClassName(data?.GetClassById?.class_name || "");
+        setEditedTeacherId(data?.GetClassById?.teacher?.teacher_id || null);
+        setEditedSemesterId(data?.GetClassById?.semester?.semester_id || null);
+        setEditedGradeId(data?.GetClassById?.grade_id || null);
+        setEditedStartDate(data?.GetClassById?.start_date ? new Date(data.GetClassById.start_date) : undefined);
+        setEditedEndDate(data?.GetClassById?.end_date ? new Date(data.GetClassById.end_date) : undefined);
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditMode(false);
+        setEditedClassName(data?.GetClassById?.class_name || "");
+        setEditedTeacherId(data?.GetClassById?.teacher?.teacher_id || null);
+        setEditedSemesterId(data?.GetClassById?.semester?.semester_id || null);
+        setEditedGradeId(data?.GetClassById?.grade_id || null);
+        setEditedStartDate(data?.GetClassById?.start_date ? new Date(data.GetClassById.start_date) : undefined);
+        setEditedEndDate(data?.GetClassById?.end_date ? new Date(data.GetClassById.end_date) : undefined);
+    };
+
+    const handleSaveChanges = () => {
+        const updates: any = {
+            class_id: parseInt(slug),
+        };
+
+        if (editedClassName !== data?.GetClassById?.class_name) {
+            updates.class_name = editedClassName;
+        }
+        if (editedTeacherId !== data?.GetClassById?.teacher?.teacher_id) {
+            updates.teacher_id = editedTeacherId;
+        }
+        if (editedSemesterId !== data?.GetClassById?.semester?.semester_id) {
+            updates.semester_id = editedSemesterId;
+        }
+        if (editedGradeId !== data?.GetClassById?.grade_id) {
+            updates.grade_id = editedGradeId;
+        }
+        if (editedStartDate) {
+            const originalStartDate = data?.GetClassById?.start_date ? new Date(data.GetClassById.start_date).toISOString() : null;
+            if (editedStartDate.toISOString() !== originalStartDate) {
+                updates.start_date = editedStartDate.toISOString();
+            }
+        }
+        if (editedEndDate) {
+            const originalEndDate = data?.GetClassById?.end_date ? new Date(data.GetClassById.end_date).toISOString() : null;
+            if (editedEndDate.toISOString() !== originalEndDate) {
+                updates.end_date = editedEndDate.toISOString();
+            }
+        }
+
+        // Only update if there are changes
+        if (Object.keys(updates).length > 1) {
+            updateClass(
+                { input: updates },
+                {
+                    onSuccess: (response) => {
+                        toast({
+                            ...RenderSuccessToast(response.message || "Class updated successfully!"),
+                        });
+                        setIsEditMode(false);
+                        // Refetch data
+                        window.location.reload();
+                    },
+                    onError: (error) => {
+                        toast({
+                            ...RenderFailedToast(error.message || "Failed to update class"),
+                        });
+                    },
+                }
+            );
+        } else {
+            setIsEditMode(false);
+        }
+    };
 
     if (loading) return <LoadingPage />;
     if (error) return <ErrorPage message="failed to render" />;
@@ -183,48 +305,80 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
                 <Card className="shadow-xl border-gray-200">
                     <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-gray-200">
                         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                            <EditableSection
-                                title="Class Name"
-                                onSave={() => console.log("Saved")}
-                                children={(isEditing) => {
-                                    return (
-                                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
-                                                    <GraduationCap className="w-8 h-8 text-white" />
-                                                </div>
-                                                <div>
-                                                    <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                                                        {data?.GetClassById?.class_name}
-                                                    </CardTitle>
-                                                    <CardDescription className="text-base mt-1">
-                                                        Class ID: #{data?.GetClassById?.class_id}
-                                                    </CardDescription>
-                                                </div>
-                                            </div>
-                                            <Badge variant="secondary" className="text-sm px-4 py-1">
-                                                {data?.GetClassById?.grade || "N/A"}
-                                            </Badge>
-                                        </div>
-                                    );
-                                }}
-                                editModeChildren={(isEditing) => {
-                                    return (
-                                        <Input
-                                            type="text"
-                                            className="max-w-md p-2 border rounded-lg focus:border-blue-500 focus:ring-blue-500"
-                                            defaultValue={data?.GetClassById?.class_name}
-                                        />
-                                    );
-                                }}
-                            />
-                            <Button
-                                onClick={renderCalendar}
-                                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-md hover:shadow-lg transition-all"
-                            >
-                                <CalendarDays className="w-4 h-4 mr-2" />
-                                View Calendar
-                            </Button>
+                            <div className="flex-1">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
+                                        <GraduationCap className="w-8 h-8 text-white" />
+                                    </div>
+                                    <div className="flex-1">
+                                        {isEditMode ? (
+                                            <Input
+                                                type="text"
+                                                value={editedClassName}
+                                                onChange={(e) => setEditedClassName(e.target.value)}
+                                                className="text-2xl font-bold max-w-md border-2 focus:border-blue-500"
+                                                placeholder="Class name"
+                                            />
+                                        ) : (
+                                            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                                                {data?.GetClassById?.class_name}
+                                            </CardTitle>
+                                        )}
+                                        <CardDescription className="text-base mt-1">
+                                            Class ID: #{data?.GetClassById?.class_id}
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {isEditMode ? (
+                                    <>
+                                        <Button
+                                            onClick={handleCancelEdit}
+                                            variant="outline"
+                                            disabled={isUpdating}
+                                        >
+                                            <X className="w-4 h-4 mr-2" />
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            onClick={handleSaveChanges}
+                                            disabled={isUpdating}
+                                            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md"
+                                        >
+                                            {isUpdating ? (
+                                                <>
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                    Saving...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Save className="w-4 h-4 mr-2" />
+                                                    Save Changes
+                                                </>
+                                            )}
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Button
+                                            onClick={handleEnterEditMode}
+                                            variant="outline"
+                                            className="hover:bg-blue-50 hover:border-blue-300"
+                                        >
+                                            <Edit className="w-4 h-4 mr-2" />
+                                            Edit Mode
+                                        </Button>
+                                        <Button
+                                            onClick={renderCalendar}
+                                            className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-md hover:shadow-lg transition-all"
+                                        >
+                                            <CalendarDays className="w-4 h-4 mr-2" />
+                                            View Calendar
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </CardHeader>
                     <CardContent className="p-6">
@@ -257,11 +411,29 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
                                         <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
                                             <GraduationCap className="h-5 w-5 text-purple-600" />
                                         </div>
-                                        <div>
+                                        <div className="flex-1">
                                             <p className="text-xs text-gray-500 font-medium">Current Semester</p>
-                                            <p className="text-lg font-semibold text-gray-900">
-                                                {data?.GetClassById?.semester?.semester_name || "N/A"}
-                                            </p>
+                                            {isEditMode ? (
+                                                <Select
+                                                    value={editedSemesterId?.toString() || ""}
+                                                    onValueChange={(value) => setEditedSemesterId(parseInt(value))}
+                                                >
+                                                    <SelectTrigger className="w-full mt-1 border-2 focus:border-purple-500">
+                                                        <SelectValue placeholder="Select semester" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {semestersData?.ListSemesters?.data?.map((semester) => (
+                                                            <SelectItem key={semester.semester_id} value={semester.semester_id.toString()}>
+                                                                {semester.semester_name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            ) : (
+                                                <p className="text-lg font-semibold text-gray-900">
+                                                    {data?.GetClassById?.semester?.semester_name || "N/A"}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
@@ -269,22 +441,77 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
                                         <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
                                             <CalendarDays className="h-5 w-5 text-green-600" />
                                         </div>
-                                        <div>
+                                        <div className="flex-1">
                                             <p className="text-xs text-gray-500 font-medium">Start Date</p>
-                                            <p className="text-lg font-semibold text-gray-900">
-                                                {data?.GetClassById?.semester?.start_date || "N/A"}
-                                            </p>
+                                            {isEditMode ? (
+                                                <ShiDateTimePicker
+                                                    Display=""
+                                                    OnSelect={setEditedStartDate}
+                                                    value={editedStartDate}
+                                                />
+                                            ) : (
+                                                <p className="text-lg font-semibold text-gray-900">
+                                                    {data?.GetClassById?.start_date
+                                                        ? new Date(data.GetClassById.start_date).toLocaleDateString()
+                                                        : "N/A"}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-lg border border-orange-100">
+                                        <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                                            <CalendarDays className="h-5 w-5 text-orange-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs text-gray-500 font-medium">End Date</p>
+                                            {isEditMode ? (
+                                                <ShiDateTimePicker
+                                                    Display=""
+                                                    OnSelect={setEditedEndDate}
+                                                    value={editedEndDate}
+                                                />
+                                            ) : (
+                                                <p className="text-lg font-semibold text-gray-900">
+                                                    {data?.GetClassById?.end_date
+                                                        ? new Date(data.GetClassById.end_date).toLocaleDateString()
+                                                        : "N/A"}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Semester Selector - appears in edit mode when dates are set */}
+                                {isEditMode && (
+                                    <SemesterSelector
+                                        startDate={editedStartDate}
+                                        endDate={editedEndDate}
+                                        selectedSemesterId={editedSemesterId}
+                                        onSelectSemester={setEditedSemesterId}
+                                    />
+                                )}
                             </div>
 
                             {/* Right Column - Teacher Info */}
                             <div className="space-y-6">
                                 <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
-                                    <Label className="text-lg font-semibold text-gray-900 mb-4 block">
-                                        Teacher (Host)
-                                    </Label>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <Label className="text-lg font-semibold text-gray-900">
+                                            Teacher (Host)
+                                        </Label>
+                                        {isEditMode && (
+                                            <Button
+                                                onClick={() => setIsTeacherModalOpen(true)}
+                                                size="sm"
+                                                variant="outline"
+                                                className="hover:bg-blue-50 hover:border-blue-300"
+                                            >
+                                                <Edit className="w-3 h-3 mr-1" />
+                                                Change
+                                            </Button>
+                                        )}
+                                    </div>
                                     <div className="flex items-center gap-4">
                                         <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
                                             <AvatarImage
@@ -306,6 +533,34 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
                                             </p>
                                         </div>
                                     </div>
+                                </div>
+
+                                {/* Grade Badge - Add editable grade */}
+                                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-200">
+                                    <Label className="text-lg font-semibold text-gray-900 mb-4 block">
+                                        Grade
+                                    </Label>
+                                    {isEditMode ? (
+                                        <Select
+                                            value={editedGradeId?.toString() || ""}
+                                            onValueChange={(value) => setEditedGradeId(parseInt(value))}
+                                        >
+                                            <SelectTrigger className="w-full border-2 focus:border-blue-500">
+                                                <SelectValue placeholder="Select grade" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {gradesData?.GetAllGrades?.data?.map((grade) => (
+                                                    <SelectItem key={grade.grade_id} value={grade.grade_id.toString()}>
+                                                        {grade.grade_name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    ) : (
+                                        <Badge variant="secondary" className="text-lg px-6 py-2">
+                                            {data?.GetClassById?.grade || "N/A"}
+                                        </Badge>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -547,6 +802,17 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
                     </Card>
                 </TabsContent>
             </Tabs>
+
+            {/* Teacher Selection Modal */}
+            <TeacherSelectionModal
+                open={isTeacherModalOpen}
+                onClose={() => setIsTeacherModalOpen(false)}
+                onSelect={(teacher) => {
+                    setEditedTeacherId(teacher.teacher_id);
+                    setIsTeacherModalOpen(false);
+                }}
+                currentTeacherId={data?.GetClassById?.teacher?.teacher_id}
+            />
             </div>
         </div>
     )
