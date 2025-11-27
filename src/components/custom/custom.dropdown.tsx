@@ -37,11 +37,10 @@ export interface DropDownElmProps extends BasicElementProps {
 
 export const CustomDropDown: React.FC<CustomDropDown> = React.memo(({ Render, Id, LabelMetadata, ElmProps, PlaceHolder, SelectItemFn }) => {
     const [dropDownItems, setDropDownItems] = useState<SelectItemMetadata[]>([]);
-    const [selectedValue, setSelectValue] = useState<SelectItemMetadata | null>(null);
 
     useEffect(() => {
         if (Render) Render().then(data => setDropDownItems(data));
-    }, []);
+    }, [Render]);
 
     const renderItems = () => dropDownItems.map((value, index) =>
         <SelectItem key={value.Key} value={value.Name}>{value.Display}</SelectItem>);
@@ -57,7 +56,6 @@ export const CustomDropDown: React.FC<CustomDropDown> = React.memo(({ Render, Id
 
     const OnSelectValue = (selectItem: SelectItemMetadata) => {
         if (!selectItem) return;
-        setSelectValue(selectItem);
         if (SelectItemFn) {
             SelectItemFn(selectItem);
         }

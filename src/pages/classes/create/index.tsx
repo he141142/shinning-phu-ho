@@ -1,34 +1,22 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/drake_libs/ui/tabs";
-import TabContainerContent from "./container_content";
-import ClassInfoPage from "./basic.class.info";
-import { useState } from "react";
+import ClassInfoPage, { OnSelect } from "./basic.class.info";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/drake_libs/ui/button";
 import { ArrowLeft, GraduationCap } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-interface TabInfo {
-    Name: string;
-    Id: string;
-}
-
-export type OnSelect = (tabName: string) => void;
-export type OnSelectCb = () => OnSelect;
-
 
 export default function CreateClassPage() {
     const router = useRouter();
-    let tabs: Map<string, TabInfo> = new Map<string, TabInfo>();
-    tabs.set("class-info", { Name: "Class Info", Id: "class-info" });
-    tabs.set("teacher", { Name: "Class Description", Id: "class-description" });
 
     const [activeTab, setActiveTab] = useState<Map<string, boolean>>(new Map<string, boolean>([
         ["class-info", true],
         ["teacher", false],
     ]));
 
-    const setActiveTabAgg = (tabName: string) => {
+    const setActiveTabAgg = useMemo(() => (tabName: string) => {
         let newActiveTab = new Map<string, boolean>();
         activeTab.forEach((value, key) => {
             if (key === tabName) {
@@ -36,24 +24,11 @@ export default function CreateClassPage() {
             }
         });
         setActiveTab(newActiveTab);
-    };
+    }, [activeTab]);
 
-    const onSelectByTab: Map<string, OnSelect> = new Map<string, OnSelect>();
-    tabs.forEach((value, key) => {
-        onSelectByTab.set(key, () => {
-            setActiveTabAgg(key);
-        });
-    });
-
-    const onSelect: OnSelect = (tabName: string) => {
-        setActiveTabAgg(tabName);
-    };
-
-    const OnSelectCB: OnSelectCb = () => (tabName: string) => {
-        setActiveTabAgg(tabName);
-    };
-
-    const classInfoPage = <ClassInfoPage OnSelect={onSelectByTab.get("class-info")}></ClassInfoPage>
+    const onSelectClassInfo = useMemo<OnSelect | undefined>(() =>
+        () => setActiveTabAgg("class-info")
+    , [setActiveTabAgg]);
 
     const backToClassPage = () => {
         router.push("/classes");
@@ -95,14 +70,14 @@ export default function CreateClassPage() {
                     <Tabs defaultValue="class-info" className="w-full">
                         <TabsList className="w-full justify-start rounded-t-2xl bg-gray-50 border-b p-2 gap-2">
                             <TabsTrigger
-                                disabled={activeTab.get("class-info")}
+                                // disabled={activeTab.get("class-info")}
                                 value="class-info"
                                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
                             >
                                 Class Info
                             </TabsTrigger>
                             <TabsTrigger
-                                disabled={activeTab.get("teacher")}
+                                // disabled={activeTab.get("teacher")}
                                 value="teacher"
                                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
                             >
@@ -110,7 +85,7 @@ export default function CreateClassPage() {
                             </TabsTrigger>
                         </TabsList>
                         <TabsContent value="class-info" className="p-8">
-                            {classInfoPage}
+                            <ClassInfoPage OnSelect={onSelectClassInfo} />
                         </TabsContent>
                         <TabsContent value="teacher" className="p-8">
                             <div className="text-center py-12 text-gray-500">

@@ -1,4 +1,5 @@
 import { Semester } from "../semesters/entity";
+import { Grade } from "../students/GetListStudent/GetListStudent";
 import { ClassConfig } from "./class.config";
 import { RoomEntity } from "./room.entity";
 
@@ -48,15 +49,13 @@ export interface GetClassByIdResponse {
   current_enrollment: number;
   room: RoomEntity | null;
   teacher: TeacherEntity | null;
-  // Note: grade and grade_id are MOCKED fields, not returned by the GraphQL API
-  // They will be replaced when backend adds grade support at the class level
-  grade?: string | null; // MOCKED: Mock grade name injected by frontend
-  grade_id?: number | null; // MOCKED: Mock grade ID injected by frontend
+
   current_semester: string | null;
   start_date: string | null;
   end_date?: string | null;
   semester?: Semester;
   room_id?: number | null;
+  grades: Grade;
 }
 
 

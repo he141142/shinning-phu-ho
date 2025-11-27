@@ -7,6 +7,17 @@ type ClassInfo = {
   Teacher: string;
   Status: string;
   Enrolled: number;
+  StartDate?: string;
+  EndDate?: string;
+  MaxStudents?: number;
+  Semester?: {
+    id: number;
+    name: string;
+  };
+  Grade?: {
+    id: number;
+    name: string;
+  };
 };
 
 type GradeInfo = {

@@ -1,5 +1,3 @@
-"use client"
-
 import { format } from "date-fns"
 import { Calendar, Clock, MapPin, Users, Trash2, Edit } from "lucide-react"
 

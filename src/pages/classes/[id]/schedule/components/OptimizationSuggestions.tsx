@@ -1,5 +1,3 @@
-"use client"
-
 import React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/drake_libs/ui/card"
 import { Alert, AlertDescription } from "@/components/drake_libs/ui/alert"

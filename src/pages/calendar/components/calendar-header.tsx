@@ -1,5 +1,3 @@
-"use client"
-
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { Button } from "@/components/drake_libs/ui/button"

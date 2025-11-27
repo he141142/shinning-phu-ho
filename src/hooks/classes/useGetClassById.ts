@@ -1,9 +1,9 @@
-import { useGraphQLQuery, gql } from '@/lib/graphql';
-import type { GetClassByIdResponse } from '@/models/class/class.detail';
+import { useGraphQLQuery, gql } from "@/lib/graphql";
+import type { GetClassByIdResponse } from "@/models/class/class.detail";
 
 const GET_CLASS_BY_ID_QUERY = gql`
-  query GetClassById($class_id: GetClassByIdInput!) {
-    GetClassById(input: $class_id) {
+  query GetClassById($input: GetClassByIdInput!) {
+    GetClassById(input: $input) {
       class_id
       class_name
       description
@@ -13,40 +13,56 @@ const GET_CLASS_BY_ID_QUERY = gql`
         id
         first_name
         last_name
+        dob
         email
         phone
+        address
+        emergency_contact_name
+        emergency_contact_phone
         grade {
           grade_id
           grade_name
         }
       }
       semester {
+        end_date
         semester_id
         semester_name
         start_date
-        end_date
       }
       class_config {
         name
         description
+        config_id
         is_enable
       }
+      max_students
+      current_enrollment
+      room_id
       room {
-        room_id
-        room_number
         capacity
         center {
           center_id
-          center_name
-          address
         }
+        room_id
+        room_number
       }
       teacher {
         teacher_id
         first_name
         last_name
-        email
+        middle_name
+        dob
+        gender
         phone_number
+        email
+        specialization
+        hire_date
+        profile_picture
+      }
+      grades {
+        grade_id
+        grade_name
       }
     }
   }
@@ -59,30 +75,20 @@ const GET_CLASS_BY_ID_QUERY = gql`
  * @example
  * const { data, isLoading, error } = useGetClassById(456);
  */
-export function useGetClassById(classId: number) {
-  const result = useGraphQLQuery<{ GetClassById: GetClassByIdResponse }>(
-    ['class', classId],
+export function useGetClassById(classId: number | undefined) {
+  const isValidClassId = !!classId && !isNaN(classId) && classId > 0;
+
+  console.log("useGetClassById - classId:", classId, "isValid:", isValidClassId);
+
+  return useGraphQLQuery<{ GetClassById: GetClassByIdResponse }>(
+    ["class", classId],
     GET_CLASS_BY_ID_QUERY,
-    { class_id: { class_id: classId } },
+    { input: { class_id: classId || 0 } },
     {
-      enabled: !!classId && classId > 0,
-      staleTime: 5 * 60 * 1000,
+      enabled: isValidClassId,
+      staleTime: 0,
+      refetchOnMount: true,
+      refetchOnWindowFocus: false,
     }
   );
-
-  // Mock grade data injection - will be replaced when backend supports grade on class level
-  if (result.data?.GetClassById) {
-    return {
-      ...result,
-      data: {
-        GetClassById: {
-          ...result.data.GetClassById,
-          grade: "Grade 10", // Mock grade name
-          grade_id: 10 // Mock grade ID
-        }
-      }
-    };
-  }
-
-  return result;
 }

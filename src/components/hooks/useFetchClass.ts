@@ -39,6 +39,10 @@ export function useFetchClasses() {
                                         current_enrollment
                                         room_id
                                         schedule
+                                        semester {
+                                            semester_id
+                                            semester_name
+                                        }
                                     }
                                 }
                             }
@@ -58,6 +62,13 @@ export function useFetchClasses() {
                     Teacher: d.teacher_id?.toString() || "-",
                     Status: "Active",
                     Enrolled: d.current_enrollment,
+                    StartDate: d.start_date || undefined,
+                    EndDate: d.end_date || undefined,
+                    MaxStudents: d.max_students,
+                    Semester: d.semster ? {
+                        id: d.semster.semester_id,
+                        name: d.semster.semester_name
+                    } : undefined,
                 })));
             } catch (err: any) {
                 setError(err.message);

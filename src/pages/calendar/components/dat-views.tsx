@@ -1,5 +1,3 @@
-"use client"
-
 import { useRef, useEffect } from "react"
 import { format, addHours } from "date-fns"
 import { cn } from "@/lib/utils"

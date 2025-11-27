@@ -17,11 +17,12 @@ import {
 } from "@/components/drake_libs/customs/custom-toast";
 import { useCreateClass } from "@/hooks/classes";
 import type { CreateClassInput } from "@/models/class/CreateClass";
+import { ClassDataPreviewProp } from "@/pages/classes/create/basic.class.info";
 
 interface CreateClassConfirmModalProps {
   open: boolean;
   onClose: () => void;
-  classData: CreateClassInput;
+  classData: ClassDataPreviewProp;
   onSuccess: () => void;
 }
 
@@ -36,7 +37,7 @@ export function CreateClassConfirmModal({
 
   const handleConfirm = () => {
     createClass(
-      { input: classData },
+      { input: classData.class_data_input },
       {
         onSuccess: (response) => {
           toast({
@@ -80,39 +81,39 @@ export function CreateClassConfirmModal({
             <div className="space-y-2">
               <p className="text-sm text-gray-500 font-medium">Class Name</p>
               <p className="font-semibold text-gray-900 text-lg">
-                {classData.class_name || "Unnamed Class"}
+                {classData.class_data_input.class_name || "Unnamed Class"}
               </p>
             </div>
 
-            {classData.description && (
+            {classData.class_data_input.description && (
               <div className="space-y-2">
                 <p className="text-sm text-gray-500 font-medium">Description</p>
-                <p className="text-gray-700">{classData.description}</p>
+                <p className="text-gray-700">{classData.class_data_input.description}</p>
               </div>
             )}
 
-            {classData.grade_id && (
+            {classData.grade_info && (
               <div className="space-y-2">
                 <p className="text-sm text-gray-500 font-medium">Grade</p>
-                <p className="text-gray-700">Grade {classData.grade_id}</p>
+                <p className="text-gray-700">{classData.grade_info.Name}</p>
               </div>
             )}
 
-            {(classData.start_date || classData.end_date) && (
+            {(classData.class_data_input.start_date || classData.class_data_input.end_date) && (
               <div className="grid grid-cols-2 gap-3">
-                {classData.start_date && (
+                {classData.class_data_input.start_date && (
                   <div className="space-y-1">
                     <p className="text-sm text-gray-500 font-medium">Start Date</p>
                     <p className="text-gray-700 text-sm">
-                      {new Date(classData.start_date).toLocaleDateString()}
+                      {new Date(classData.class_data_input.start_date).toLocaleDateString()}
                     </p>
                   </div>
                 )}
-                {classData.end_date && (
+                {classData.class_data_input.end_date && (
                   <div className="space-y-1">
                     <p className="text-sm text-gray-500 font-medium">End Date</p>
                     <p className="text-gray-700 text-sm">
-                      {new Date(classData.end_date).toLocaleDateString()}
+                      {new Date(classData.class_data_input.end_date).toLocaleDateString()}
                     </p>
                   </div>
                 )}

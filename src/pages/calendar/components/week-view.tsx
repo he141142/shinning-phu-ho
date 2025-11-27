@@ -1,5 +1,3 @@
-"use client"
-
 import { useRef, useEffect } from "react"
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, addHours, isSameDay, isToday } from "date-fns"
 import { cn } from "@/lib/utils"

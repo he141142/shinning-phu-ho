@@ -1,33 +1,66 @@
 "use client"
-
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/router';
-import { format } from 'date-fns';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/drake_libs/ui/card';
-import { Button } from '@/components/drake_libs/ui/button';
-import { Label } from '@/components/drake_libs/ui/label';
-import { Textarea } from '@/components/drake_libs/ui/textarea';
-import { Badge } from '@/components/drake_libs/ui/badge';
-import { Skeleton } from '@/components/drake_libs/ui/skeleton';
-import { useToast } from '@/components/hooks/use-toast';
-import { Calendar as CalendarIcon, Save, CheckCircle2, ArrowLeft, Users, Clock } from 'lucide-react';
-import { useGetClassStudents, useMarkAttendance } from '@/hooks/attendance';
-import type { AttendanceStatus, AttendanceRecord } from '@/models/attendance/Attendance';
-import { RadioGroup, RadioGroupItem } from '@/components/drake_libs/ui/radio-group';
-import { Calendar } from '@/components/drake_libs/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/drake_libs/ui/popover';
-import { cn } from '@/lib/utils';
+import { useState, useMemo, useEffect } from "react";
+import { format } from "date-fns";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/drake_libs/ui/card";
+import { Button } from "@/components/drake_libs/ui/button";
+import { Label } from "@/components/drake_libs/ui/label";
+import { Textarea } from "@/components/drake_libs/ui/textarea";
+import { Badge } from "@/components/drake_libs/ui/badge";
+import { Skeleton } from "@/components/drake_libs/ui/skeleton";
+import { useToast } from "@/components/hooks/use-toast";
+import {
+  Calendar as CalendarIcon,
+  Save,
+  CheckCircle2,
+  ArrowLeft,
+  Users,
+  Clock,
+} from "lucide-react";
+import { useGetClassStudents, useMarkAttendance } from "@/hooks/attendance";
+import type {
+  AttendanceStatus,
+  AttendanceRecord,
+} from "@/models/attendance/Attendance";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/drake_libs/ui/radio-group";
+import { Calendar } from "@/components/drake_libs/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/drake_libs/ui/popover";
+import { cn } from "@/lib/utils";
+import { useRouter, useParams } from "next/navigation";
+import { LoadingPage } from "@/components/drake_libs/component/loading-page";
 
 export default function TeacherAttendancePage() {
   const router = useRouter();
-  const { classId, sessionId } = router.query;
+  const params = useParams();
+
+  if (!params || !params["classId"] || !params["sessionId"]) {
+    return <LoadingPage />;
+  }
+
+  const { classId, sessionId } = params;
   const { toast } = useToast();
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [attendanceRecords, setAttendanceRecords] = useState<Map<number, AttendanceRecord>>(new Map());
+  const [attendanceRecords, setAttendanceRecords] = useState<
+    Map<number, AttendanceRecord>
+  >(new Map());
 
   // Get enrolled students
-  const { students, isLoading: studentsLoading } = useGetClassStudents(Number(classId));
+  const { students, isLoading: studentsLoading } = useGetClassStudents(
+    Number(classId)
+  );
 
   // Mark attendance mutation
   const { mutate: markAttendance, isPending: isSaving } = useMarkAttendance({
@@ -50,12 +83,12 @@ export default function TeacherAttendancePage() {
   useMemo(() => {
     if (students.length > 0 && attendanceRecords.size === 0) {
       const initialRecords = new Map<number, AttendanceRecord>();
-      students.forEach(student => {
+      students.forEach((student) => {
         initialRecords.set(student.student_id, {
           student_id: student.student_id,
           student_name: `${student.student_first_name} ${student.student_last_name}`,
-          status: 'present',
-          notes: '',
+          status: "present",
+          notes: "",
         });
       });
       setAttendanceRecords(initialRecords);
@@ -63,7 +96,7 @@ export default function TeacherAttendancePage() {
   }, [students, attendanceRecords.size]);
 
   const handleStatusChange = (studentId: number, status: AttendanceStatus) => {
-    setAttendanceRecords(prev => {
+    setAttendanceRecords((prev) => {
       const newRecords = new Map(prev);
       const record = newRecords.get(studentId);
       if (record) {
@@ -74,7 +107,7 @@ export default function TeacherAttendancePage() {
   };
 
   const handleNotesChange = (studentId: number, notes: string) => {
-    setAttendanceRecords(prev => {
+    setAttendanceRecords((prev) => {
       const newRecords = new Map(prev);
       const record = newRecords.get(studentId);
       if (record) {
@@ -85,10 +118,10 @@ export default function TeacherAttendancePage() {
   };
 
   const handleMarkAllPresent = () => {
-    setAttendanceRecords(prev => {
+    setAttendanceRecords((prev) => {
       const newRecords = new Map(prev);
       newRecords.forEach((record, studentId) => {
-        newRecords.set(studentId, { ...record, status: 'present' });
+        newRecords.set(studentId, { ...record, status: "present" });
       });
       return newRecords;
     });
@@ -99,7 +132,7 @@ export default function TeacherAttendancePage() {
   };
 
   const handleSaveAttendance = () => {
-    const records = Array.from(attendanceRecords.values()).map(record => ({
+    const records = Array.from(attendanceRecords.values()).map((record) => ({
       student_id: record.student_id,
       status: record.status,
       notes: record.notes || undefined,
@@ -109,7 +142,7 @@ export default function TeacherAttendancePage() {
       input: {
         class_id: Number(classId),
         session_id: Number(sessionId),
-        date: format(selectedDate, 'yyyy-MM-dd'),
+        date: format(selectedDate, "yyyy-MM-dd"),
         records,
       },
     });
@@ -117,10 +150,14 @@ export default function TeacherAttendancePage() {
 
   const getStatusBadgeVariant = (status: AttendanceStatus) => {
     switch (status) {
-      case 'present': return 'default';
-      case 'absent': return 'destructive';
-      case 'late': return 'secondary';
-      case 'excused': return 'outline';
+      case "present":
+        return "default";
+      case "absent":
+        return "destructive";
+      case "late":
+        return "secondary";
+      case "excused":
+        return "outline";
     }
   };
 
@@ -132,7 +169,7 @@ export default function TeacherAttendancePage() {
       excused: 0,
     };
 
-    attendanceRecords.forEach(record => {
+    attendanceRecords.forEach((record) => {
       summary[record.status]++;
     });
 
@@ -162,8 +199,12 @@ export default function TeacherAttendancePage() {
               <div className="absolute inset-0 bg-black/10"></div>
               <div className="relative h-full flex items-center justify-between px-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-white mb-1">Class Attendance</h1>
-                  <p className="text-white/90">Session #{sessionId} • Class #{classId}</p>
+                  <h1 className="text-3xl font-bold text-white mb-1">
+                    Class Attendance
+                  </h1>
+                  <p className="text-white/90">
+                    Session #{sessionId} • Class #{classId}
+                  </p>
                 </div>
                 <div className="flex items-center gap-4">
                   <Popover>
@@ -176,7 +217,11 @@ export default function TeacherAttendancePage() {
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDate ? format(selectedDate, 'PPP') : <span>Pick a date</span>}
+                        {selectedDate ? (
+                          format(selectedDate, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="end">
@@ -200,27 +245,45 @@ export default function TeacherAttendancePage() {
                     <Users className="w-4 h-4" />
                     <span>Total</span>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{students.length}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {students.length}
+                  </p>
                 </div>
 
                 <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800">
-                  <p className="text-green-600 dark:text-green-400 text-sm mb-1">Present</p>
-                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">{attendanceSummary.present}</p>
+                  <p className="text-green-600 dark:text-green-400 text-sm mb-1">
+                    Present
+                  </p>
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                    {attendanceSummary.present}
+                  </p>
                 </div>
 
                 <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800">
-                  <p className="text-red-600 dark:text-red-400 text-sm mb-1">Absent</p>
-                  <p className="text-2xl font-bold text-red-700 dark:text-red-300">{attendanceSummary.absent}</p>
+                  <p className="text-red-600 dark:text-red-400 text-sm mb-1">
+                    Absent
+                  </p>
+                  <p className="text-2xl font-bold text-red-700 dark:text-red-300">
+                    {attendanceSummary.absent}
+                  </p>
                 </div>
 
                 <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
-                  <p className="text-amber-600 dark:text-amber-400 text-sm mb-1">Late</p>
-                  <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{attendanceSummary.late}</p>
+                  <p className="text-amber-600 dark:text-amber-400 text-sm mb-1">
+                    Late
+                  </p>
+                  <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">
+                    {attendanceSummary.late}
+                  </p>
                 </div>
 
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Excused</p>
-                  <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">{attendanceSummary.excused}</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">
+                    Excused
+                  </p>
+                  <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                    {attendanceSummary.excused}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -244,7 +307,7 @@ export default function TeacherAttendancePage() {
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 ml-auto"
           >
             <Save className="w-4 h-4 mr-2" />
-            {isSaving ? 'Saving...' : 'Save Attendance'}
+            {isSaving ? "Saving..." : "Save Attendance"}
           </Button>
         </div>
 
@@ -252,12 +315,14 @@ export default function TeacherAttendancePage() {
         <Card className="bg-white dark:bg-gray-900 shadow-xl">
           <CardHeader>
             <CardTitle>Student Attendance</CardTitle>
-            <CardDescription>Mark attendance for each enrolled student</CardDescription>
+            <CardDescription>
+              Mark attendance for each enrolled student
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {studentsLoading ? (
               <div className="space-y-4">
-                {[1, 2, 3, 4, 5].map(i => (
+                {[1, 2, 3, 4, 5].map((i) => (
                   <div key={i} className="flex items-center gap-4">
                     <Skeleton className="h-12 flex-1" />
                     <Skeleton className="h-12 w-48" />
@@ -283,26 +348,50 @@ export default function TeacherAttendancePage() {
                       {/* Student Name */}
                       <div className="flex-1">
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          {student.student_first_name} {student.student_last_name}
+                          {student.student_first_name}{" "}
+                          {student.student_last_name}
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">ID: {student.student_id}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          ID: {student.student_id}
+                        </p>
                       </div>
 
                       {/* Status Radio Group */}
                       <div className="md:w-80">
                         <RadioGroup
                           value={record.status}
-                          onValueChange={(value) => handleStatusChange(student.student_id, value as AttendanceStatus)}
+                          onValueChange={(value) =>
+                            handleStatusChange(
+                              student.student_id,
+                              value as AttendanceStatus
+                            )
+                          }
                           className="flex gap-2"
                         >
-                          {(['present', 'absent', 'late', 'excused'] as AttendanceStatus[]).map(status => (
-                            <div key={status} className="flex items-center space-x-2">
-                              <RadioGroupItem value={status} id={`${student.student_id}-${status}`} />
+                          {(
+                            [
+                              "present",
+                              "absent",
+                              "late",
+                              "excused",
+                            ] as AttendanceStatus[]
+                          ).map((status) => (
+                            <div
+                              key={status}
+                              className="flex items-center space-x-2"
+                            >
+                              <RadioGroupItem
+                                value={status}
+                                id={`${student.student_id}-${status}`}
+                              />
                               <Label
                                 htmlFor={`${student.student_id}-${status}`}
                                 className="cursor-pointer capitalize"
                               >
-                                <Badge variant={getStatusBadgeVariant(status)} className="text-xs">
+                                <Badge
+                                  variant={getStatusBadgeVariant(status)}
+                                  className="text-xs"
+                                >
                                   {status}
                                 </Badge>
                               </Label>
@@ -316,7 +405,12 @@ export default function TeacherAttendancePage() {
                         <Textarea
                           placeholder="Add notes (optional)"
                           value={record.notes}
-                          onChange={(e) => handleNotesChange(student.student_id, e.target.value)}
+                          onChange={(e) =>
+                            handleNotesChange(
+                              student.student_id,
+                              e.target.value
+                            )
+                          }
                           className="resize-none h-10"
                           rows={1}
                         />

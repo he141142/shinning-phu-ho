@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { ChevronLeft, ChevronRight, ClipboardCheck } from "lucide-react"
 import { Button } from "@/components/drake_libs/ui/button"

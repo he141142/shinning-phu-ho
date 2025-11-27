@@ -16,6 +16,7 @@ interface SemesterSelectorProps {
   selectedSemesterId: number | null;
   onSelectSemester: (semesterId: number | null) => void;
   className?: string;
+  isOnLoading?: boolean;
 }
 
 export function SemesterSelector({
@@ -42,16 +43,16 @@ export function SemesterSelector({
 
   const { data, isLoading, error } = useGetSemestersByDateRange(
     {
-  from_date: startDate ? format(startDate, "yyyy-MM-dd") : "",
-  to_date: endDate ? format(endDate, "yyyy-MM-dd") : "",
-},
+      from_date: startDate ? format(startDate, "yyyy-MM-dd") : "",
+      to_date: endDate ? format(endDate, "yyyy-MM-dd") : "",
+    },
     {
       enabled: shouldFetch,
     }
   );
 
   const semesters = data?.FilterSemesters || [];
-  const showPopup = shouldFetch && (startDate && endDate);
+  const showPopup = shouldFetch && startDate && endDate;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -91,7 +92,9 @@ export function SemesterSelector({
             >
               <div className="text-center space-y-3">
                 <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto" />
-                <p className="text-sm text-gray-600">Finding available semesters...</p>
+                <p className="text-sm text-gray-600">
+                  Finding available semesters...
+                </p>
               </div>
             </motion.div>
           )}
@@ -122,7 +125,9 @@ export function SemesterSelector({
                 <Calendar className="w-8 h-8 text-gray-400" />
               </div>
               <div className="text-center space-y-1">
-                <p className="font-semibold text-gray-900">No semesters available</p>
+                <p className="font-semibold text-gray-900">
+                  No semesters available
+                </p>
                 <p className="text-sm text-gray-600">
                   No semesters match the selected date range
                 </p>
@@ -143,7 +148,8 @@ export function SemesterSelector({
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {semesters.map((semester, index) => {
-                  const isSelected = selectedSemesterId === semester.semester_id;
+                  const isSelected =
+                    selectedSemesterId === semester.semester_id;
 
                   return (
                     <motion.div
@@ -154,9 +160,11 @@ export function SemesterSelector({
                     >
                       <button
                         type="button"
-                        onClick={() => onSelectSemester(
-                          isSelected ? null : semester.semester_id
-                        )}
+                        onClick={() =>
+                          onSelectSemester(
+                            isSelected ? null : semester.semester_id
+                          )
+                        }
                         className={cn(
                           "w-full text-left p-4 rounded-lg border-2 transition-all duration-200",
                           isSelected

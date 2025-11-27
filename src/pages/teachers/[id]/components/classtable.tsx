@@ -1,5 +1,3 @@
-"use client"
-
 import { useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { PlusCircle, Eye, LogOut, BookOpen } from "lucide-react"

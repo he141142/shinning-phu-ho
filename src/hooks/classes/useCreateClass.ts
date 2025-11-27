@@ -7,7 +7,7 @@ const CREATE_CLASS_MUTATION = gql`
     CreateClass(input: $input) {
       status
       message
-      class_id
+      entity_id
     }
   }
 `;

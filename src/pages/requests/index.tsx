@@ -1,5 +1,3 @@
-"use client"
-
 import { use, useContext, useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/drake_libs/ui/tabs"

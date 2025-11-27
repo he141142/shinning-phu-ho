@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { BookOpen, BookText, Clock, Download, FileText, Search, Star, Video } from "lucide-react"

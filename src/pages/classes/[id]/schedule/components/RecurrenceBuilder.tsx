@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/drake_libs/ui/card"
 import { Label } from "@/components/drake_libs/ui/label"

@@ -1,5 +1,3 @@
-"use client"
-
 import React from "react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/drake_libs/ui/alert"
 import { Badge } from "@/components/drake_libs/ui/badge"

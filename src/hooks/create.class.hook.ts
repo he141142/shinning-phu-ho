@@ -1,21 +1,19 @@
 import { GradeInfo } from "@/models/class/class";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 export const UseCreateClassHook = () => {
   const [Grades, setGrades] = useState<GradeInfo[]>([]);
   const [className, setClassName] = useState<string>("");
-  let GradeBySelectItem: Map<string, GradeInfo> = new Map<string, GradeInfo>();
+
+  const GradeBySelectItem = useMemo(() => {
+    const map = new Map<string, GradeInfo>();
+    for (let grade of Grades) {
+      map.set(grade.Id.toString(), grade);
+    }
+    return map;
+  }, [Grades]);
 
   let classNameDispl = className;
-
-  const reRenderMap = () => {
-    for (let grade of Grades) {
-      GradeBySelectItem.set(grade.Id.toString(), grade);
-    }
-    console.log(GradeBySelectItem);
-  };
-
-  reRenderMap();
 
   return {
     GradeBySelectItem,

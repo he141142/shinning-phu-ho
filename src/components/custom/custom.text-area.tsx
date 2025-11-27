@@ -12,7 +12,7 @@ export interface CustomTextAreaProps {
     resize?: boolean
     OnChange ?: (value: string) => void;
 }
-
+    
 export const CustomTextArea: React.FC<CustomTextAreaProps> = React.memo(({ LabelMetadata, BasicElementProps, PlaceHolder,resize, OnChange }) => {
     return (
         <>

@@ -4,7 +4,9 @@ export interface CreateClassInput {
   grade_id?: number;
   start_date?: string;
   end_date?: string;
-  semester_id?: number;
+  current_semester?: number;
+  max_students: number;
+  center_id: number;
 }
 
 export interface CreateClassResponse {

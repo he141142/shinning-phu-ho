@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/router"
 import { Button } from "@/components/drake_libs/ui/button"
