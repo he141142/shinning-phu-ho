@@ -88,6 +88,7 @@ const ClassInfoPage = (props: { OnSelect: OnSelect | undefined }) => {
 
   const handleSuccess = () => {
     router.push("/classes");
+    router.refresh();
   };
 
   const getClassData = (): ClassDataPreviewProp => {

@@ -7,10 +7,8 @@ import { Button } from "@/components/drake_libs/ui/button";
 import { ArrowLeft, GraduationCap } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-
 export default function CreateClassPage() {
     const router = useRouter();
-
     const [activeTab, setActiveTab] = useState<Map<string, boolean>>(new Map<string, boolean>([
         ["class-info", true],
         ["teacher", false],
@@ -30,8 +28,9 @@ export default function CreateClassPage() {
         () => setActiveTabAgg("class-info")
     , [setActiveTabAgg]);
 
-    const backToClassPage = () => {
-        router.push("/classes");
+    const backToClassPage = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        window.location.href = "/classes";
     };
 
     return (
