@@ -6,13 +6,13 @@ import { Card } from "@/components/drake_libs/ui/card";
 import { Label } from "@/components/drake_libs/ui/label";
 import { cn } from "@/lib/utils";
 import { ClassSemester } from "@/hooks/classes/useGetClassSemesters";
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
 
 export const SemesterSelectorStatic: React.FC<{
   className?: string;
@@ -20,8 +20,8 @@ export const SemesterSelectorStatic: React.FC<{
   errorLoaded: boolean;
   semesters: ClassSemester[];
   selectedSemesterId: number;
-}> = ({ className, loaded, semesters, selectedSemesterId,errorLoaded }) => {
-    
+  setEditedSemesterId: (semId: number) => void;
+}> = ({ className, loaded, semesters, selectedSemesterId, errorLoaded, setEditedSemesterId }) => {
   return (
     <>
       <AnimatePresence>
@@ -73,7 +73,7 @@ export const SemesterSelectorStatic: React.FC<{
             )}
 
             {/* No Semesters Available */}
-            { loaded && semesters.length === 0 && (
+            {loaded && semesters.length === 0 && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -118,6 +118,9 @@ export const SemesterSelectorStatic: React.FC<{
                         transition={{ delay: index * 0.05 }}
                       >
                         <button
+                          onClick={() =>
+                            setEditedSemesterId(semester.semester_id)
+                          }
                           type="button"
                           className={cn(
                             "w-full text-left p-4 rounded-lg border-2 transition-all duration-200",

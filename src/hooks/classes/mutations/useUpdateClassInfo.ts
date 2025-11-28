@@ -16,9 +16,9 @@ const query = gql`
 export interface EditClassInfoInput {
   class_id: number;
   class_name: string;
-  teacher_id: number;
-  current_semester_id: number;
-  grade_id: number;
+  teacher_id: number | null | undefined;
+  current_semester_id: number| null | undefined;
+  grade_id: number| null | undefined;
 }
 
 export interface EditClassInfoResponse {

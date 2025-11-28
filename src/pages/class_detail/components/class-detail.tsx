@@ -76,15 +76,25 @@ import { useRouter } from "next/navigation";
 import { SemesterTimeline, ClassSemesterData } from "./SemesterTimeline";
 import { Semester } from "@/models/semesters/entity";
 import { useGetClassById } from "@/hooks";
-import {
-  ClassSemester,
-  useGetClassSemesters,
-} from "@/hooks/classes/useGetClassSemesters";
+import { ClassSemester } from "@/hooks/classes/useGetClassSemesters";
 import { SemesterSelect } from "./semester-select";
 import { SemesterSelectorStatic } from "@/components/classes/SemesterSelectorStatic";
 import { RenderStudentSkeletons } from "./render-skeletons";
 import { useClassSchemaEdit } from "../types/edit-class";
 import { useEditClassInfo } from "@/hooks/classes/mutations/useUpdateClassInfo";
+import { UseFilterSemesters } from "@/hooks/semesters/useFilterSemester";
+import { TransformerFunc } from "@/lib/transformer";
+import { format } from "date-fns";
+
+const SemesterToClassSemester: TransformerFunc<Semester, ClassSemester> = (
+  dto
+) => ({
+  semester_id: dto.semester_id,
+  semester_name: dto.semester_name,
+  start_date: dto.start_date,
+  end_date: dto.end_date,
+  status: "",
+});
 
 export function ClassDetailComponent({ slug }: { slug: string }) {
   const [activeTab, setActiveTab] = useState("details");
@@ -108,6 +118,8 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
   const [pendingStudentJoined, setPendingStudentJoined] = useState<number>(0);
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
 
   // Watch form values
   const editedClassName = watch("editedClassName");
@@ -116,12 +128,15 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
   const editedGradeId = watch("editedGradeId");
   const editTeacher = watch("editTeacher");
 
+  const setEditedSemesterId = (value: number) => {
+    setValue("editedSemesterId", value);
+  };
+
   // Semester management state - Mock data for now (replace with actual API calls)
   const [classPastSemesters, setClassPastSemesters] = useState<Semester[]>([]);
   const [classUpcomingSemesters, setClassUpcomingSemesters] = useState<
     Semester[]
   >([]);
-
 
   // Parse classId from slug with proper validation
   const classId = slug ? parseInt(slug, 10) : undefined;
@@ -130,12 +145,14 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
   const { mutate: updateClass, isPending: isUpdating } = useEditClassInfo();
   const { data: semestersData } = useGetListSemesters({ page: 1, limit: 100 });
   const { data: gradesData } = useGetAllGrades();
-
   const {
     data: classSemesters,
     isLoading: isSemestersLoading,
     error: isSemesterLoadingError,
-  } = useGetClassSemesters(classId);
+  } = UseFilterSemesters({
+    from_date: startDate ?? "",
+    to_date: endDate ?? "",
+  });
   const {
     data: classData,
     error,
@@ -176,6 +193,9 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
             }
           : null,
       });
+
+      setStartDate(semester?.start_date || null);
+      setEndDate(semester?.end_date || null);
     }
   }, [classData, reset]);
 
@@ -259,7 +279,6 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
     if (!classId) return;
 
     console.log("form data :", formData);
-    
 
     const updates: any = {
       class_id: classId,
@@ -290,9 +309,9 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
           input: {
             class_id: classId,
             class_name: editedClassName,
-            current_semester_id: editedSemesterId,
-            grade_id: editedGradeId,
-            teacher_id: editedTeacherId,
+            current_semester_id: editedSemesterId ,
+            grade_id: editedGradeId ,
+            teacher_id: editedTeacherId ,
           },
         },
         {
@@ -384,11 +403,18 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
 
   const dataLoaded = transformToStudentModel();
 
-  const selectedSemester: ClassSemester | undefined =
-    classSemesters?.GetClassSemesters.findLast(
-      (semester) => semester.semester_id === editedSemesterId
-    );
+  const getSelectedSemester: () => ClassSemester | undefined = () => {
+    const _selectedSemester: Semester | undefined =
+      classSemesters?.FilterSemesters.findLast(
+        (semester) => semester.semester_id === editedSemesterId
+      );
 
+    if (!_selectedSemester) {
+      return undefined;
+    }
+    return SemesterToClassSemester(_selectedSemester!);
+  };
+  const selectedSemester: ClassSemester | undefined = getSelectedSemester();
   const selectedSemesterData = {
     selectedSemester: selectedSemester,
     startDateDisplay: selectedSemester?.start_date,
@@ -525,7 +551,11 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
                             !classSemesters ||
                             fakeLoading
                           }
-                          semesters={classSemesters?.GetClassSemesters ?? []}
+                          semesters={
+                            classSemesters?.FilterSemesters?.map((o) =>
+                              SemesterToClassSemester(o)
+                            ) ?? []
+                          }
                           setEditedSemesterId={(id) => {
                             setValue("editedSemesterId", id as number);
                           }}
@@ -550,8 +580,10 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
                       {isEditMode ? (
                         <ShiDateTimePicker
                           Display={selectedSemesterData.startDateDisplay ?? ""}
-                          OnSelect={() => {}}
-                          canEdit={false}
+                          OnSelect={(d) => {
+                            setStartDate(d ? format(d, "yyyy-MM-dd") : null);
+                          }}
+                          canEdit={true}
                           showTime={false}
                           value={
                             selectedSemester?.start_date
@@ -582,8 +614,10 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
                       {isEditMode ? (
                         <ShiDateTimePicker
                           Display={selectedSemesterData.endDateDisplay ?? ""}
-                          OnSelect={() => {}}
-                          canEdit={false}
+                          OnSelect={(d) => {
+                            setEndDate(d ? format(d, "yyyy-MM-dd") : null);
+                          }}
+                          canEdit={true}
                           showTime={false}
                           value={
                             selectedSemester?.end_date
@@ -608,9 +642,14 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
                 {isEditMode && (
                   <SemesterSelectorStatic
                     loaded={!isSemestersLoading}
-                    semesters={classSemesters?.GetClassSemesters ?? []}
+                    semesters={
+                      classSemesters?.FilterSemesters?.map((o) =>
+                        SemesterToClassSemester(o)
+                      ) ?? []
+                    }
                     selectedSemesterId={selectedSemester?.semester_id ?? -1}
                     errorLoaded={!!isSemesterLoadingError}
+                    setEditedSemesterId={setEditedSemesterId}
                   />
                 )}
               </div>
@@ -672,7 +711,6 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
                       value={editedGradeId?.toString() || ""}
                       onValueChange={(value) => {
                         setValue("editedGradeId", parseInt(value));
-                        
                       }}
                     >
                       <SelectTrigger className="w-full border-2 focus:border-blue-500">
