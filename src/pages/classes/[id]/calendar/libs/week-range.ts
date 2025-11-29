@@ -44,19 +44,21 @@ export class WeekRangeByYear {
   }
 
   getCurrentWeek(): WeekRange {
-    const today = new Date();
-    console.log("today", today);
-    console.log("this.weekRange", this.weekRange);
-    
-    
-    let weekRange =  this.weekRange.find((week) => {
-      return today.getTime() >= week.start.getTime() && today.getTime() <= week.end.getTime();
+   let def =   new WeekRangeByYear(new Date().getFullYear());
+   def.load();
+   return def.getWeekRangeByDate(new Date());
+  }
+
+  getWeekRangeByDate(date: Date): WeekRange {
+    let weekRange = this.weekRange.find((week) => {
+      return (
+        date.getTime() >= week.start.getTime() &&
+        date.getTime() <= week.end.getTime()
+      );
     });
 
     if (!weekRange) {
-        console.log("false to if");
-        
-      weekRange = this.weekRange[this.weekRange.length - 1];
+      return this.getCurrentWeek();
     }
     return weekRange;
   }

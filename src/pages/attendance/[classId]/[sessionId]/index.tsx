@@ -1,5 +1,5 @@
-"use client"
-import { useState, useMemo, useEffect } from "react";
+"use client";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import {
   Card,
@@ -9,10 +9,7 @@ import {
   CardTitle,
 } from "@/components/drake_libs/ui/card";
 import { Button } from "@/components/drake_libs/ui/button";
-import { Label } from "@/components/drake_libs/ui/label";
-import { Textarea } from "@/components/drake_libs/ui/textarea";
-import { Badge } from "@/components/drake_libs/ui/badge";
-import { Skeleton } from "@/components/drake_libs/ui/skeleton";
+
 import { useToast } from "@/components/hooks/use-toast";
 import {
   Calendar as CalendarIcon,
@@ -20,17 +17,8 @@ import {
   CheckCircle2,
   ArrowLeft,
   Users,
-  Clock,
 } from "lucide-react";
-import { useGetClassStudents, useMarkAttendance } from "@/hooks/attendance";
-import type {
-  AttendanceStatus,
-  AttendanceRecord,
-} from "@/models/attendance/Attendance";
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@/components/drake_libs/ui/radio-group";
+
 import { Calendar } from "@/components/drake_libs/ui/calendar";
 import {
   Popover,
@@ -40,16 +28,19 @@ import {
 import { cn } from "@/lib/utils";
 import { useRouter, useParams } from "next/navigation";
 import { LoadingPage } from "@/components/drake_libs/component/loading-page";
+import {
+  Attendance,
+  AttendanceRecord,
+  attendanceService,
+  AttendanceStatus,
+  UseGetAttendancesBySessionID,
+} from "@/hooks/api/external/attendance_service";
+import { AttendanceList } from "./components/attendance-list";
 
 export default function TeacherAttendancePage() {
   const router = useRouter();
   const params = useParams();
-
-  if (!params || !params["classId"] || !params["sessionId"]) {
-    return <LoadingPage />;
-  }
-
-  const { classId, sessionId } = params;
+  const session_id = Number((params && params["sessionId"]) || -1);
   const { toast } = useToast();
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -57,109 +48,21 @@ export default function TeacherAttendancePage() {
     Map<number, AttendanceRecord>
   >(new Map());
 
-  // Get enrolled students
-  const { students, isLoading: studentsLoading } = useGetClassStudents(
-    Number(classId)
+
+  
+const handleStatusChange = useCallback(
+    (studentId: number, attendance_status: AttendanceStatus) => {
+      setAttendanceRecords((prev) => {
+        const newRecords = new Map(prev);
+        const record = newRecords.get(studentId);
+        if (record) {
+          newRecords.set(studentId, { ...record, attendance_status });
+        }
+        return newRecords;
+      });
+    },
+    []
   );
-
-  // Mark attendance mutation
-  const { mutate: markAttendance, isPending: isSaving } = useMarkAttendance({
-    onSuccess: (data) => {
-      toast({
-        title: "Success",
-        description: data.message || "Attendance saved successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save attendance",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Initialize attendance records when students load
-  useMemo(() => {
-    if (students.length > 0 && attendanceRecords.size === 0) {
-      const initialRecords = new Map<number, AttendanceRecord>();
-      students.forEach((student) => {
-        initialRecords.set(student.student_id, {
-          student_id: student.student_id,
-          student_name: `${student.student_first_name} ${student.student_last_name}`,
-          status: "present",
-          notes: "",
-        });
-      });
-      setAttendanceRecords(initialRecords);
-    }
-  }, [students, attendanceRecords.size]);
-
-  const handleStatusChange = (studentId: number, status: AttendanceStatus) => {
-    setAttendanceRecords((prev) => {
-      const newRecords = new Map(prev);
-      const record = newRecords.get(studentId);
-      if (record) {
-        newRecords.set(studentId, { ...record, status });
-      }
-      return newRecords;
-    });
-  };
-
-  const handleNotesChange = (studentId: number, notes: string) => {
-    setAttendanceRecords((prev) => {
-      const newRecords = new Map(prev);
-      const record = newRecords.get(studentId);
-      if (record) {
-        newRecords.set(studentId, { ...record, notes });
-      }
-      return newRecords;
-    });
-  };
-
-  const handleMarkAllPresent = () => {
-    setAttendanceRecords((prev) => {
-      const newRecords = new Map(prev);
-      newRecords.forEach((record, studentId) => {
-        newRecords.set(studentId, { ...record, status: "present" });
-      });
-      return newRecords;
-    });
-    toast({
-      title: "Marked All Present",
-      description: `All ${students.length} students marked as present`,
-    });
-  };
-
-  const handleSaveAttendance = () => {
-    const records = Array.from(attendanceRecords.values()).map((record) => ({
-      student_id: record.student_id,
-      status: record.status,
-      notes: record.notes || undefined,
-    }));
-
-    markAttendance({
-      input: {
-        class_id: Number(classId),
-        session_id: Number(sessionId),
-        date: format(selectedDate, "yyyy-MM-dd"),
-        records,
-      },
-    });
-  };
-
-  const getStatusBadgeVariant = (status: AttendanceStatus) => {
-    switch (status) {
-      case "present":
-        return "default";
-      case "absent":
-        return "destructive";
-      case "late":
-        return "secondary";
-      case "excused":
-        return "outline";
-    }
-  };
 
   const attendanceSummary = useMemo(() => {
     const summary = {
@@ -170,11 +73,85 @@ export default function TeacherAttendancePage() {
     };
 
     attendanceRecords.forEach((record) => {
-      summary[record.status]++;
+      summary[record.attendance_status]++;
     });
 
     return summary;
   }, [attendanceRecords]);
+
+  const {
+    data: attendanceData,
+    error: attendanceError,
+    loading: attendanceLoading,
+  } = UseGetAttendancesBySessionID({ session_id: session_id });
+  
+  if (
+    !params ||
+    !params["classId"] ||
+    !params["sessionId"] ||
+    attendanceLoading ||
+    !attendanceData ||
+    attendanceError
+  ) {
+    return <LoadingPage />;
+  }
+
+  const isSaving  = false;
+
+  const { classId, sessionId } = params;
+
+  // Mark attendance mutation -> replace with RUST api call
+  const markAttendance = async (
+    student_id: number,
+    session_id: number
+  ): Promise<Attendance | null> => {
+    return await attendanceService.RecordAttendance({
+      student_id,
+      session_id,
+    });
+  };
+
+  
+  const handleMarkAllPresent = () => {
+    setAttendanceRecords((prev) => {
+      const newRecords = new Map(prev);
+      newRecords.forEach((record, studentId) => {
+        newRecords.set(studentId, { ...record, attendance_status: "present" });
+      });
+      return newRecords;
+    });
+    toast({
+      title: "Marked All Present",
+      description: `All ${attendanceData?.data?.length} students marked as present`,
+    });
+  };
+
+  const handleSaveAttendance = async () => {
+    const records = Array.from(attendanceRecords.values());
+
+    // Map to an array of promises
+    const promises = records.map((record) =>
+      markAttendance(record.student_id, session_id)
+    );
+
+    // Wait for all promises to resolve
+    const results = await Promise.all(promises);
+
+    console.log("All attendance marked:", results);
+  };
+
+  const getStatusBadgeVariant = (status: AttendanceStatus) => {
+    switch (status) {
+      case "present":
+        return "default";
+      case "absent":
+        return "destructive";
+      // case "late":
+      //   return "secondary";
+      // case "excused":
+      //   return "outline";
+    }
+  };
 
   if (!classId || !sessionId) {
     return <div>Loading...</div>;
@@ -246,7 +223,7 @@ export default function TeacherAttendancePage() {
                     <span>Total</span>
                   </div>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {students.length}
+                    {attendanceData?.data?.length || 0}
                   </p>
                 </div>
 
@@ -303,7 +280,7 @@ export default function TeacherAttendancePage() {
 
           <Button
             onClick={handleSaveAttendance}
-            disabled={isSaving || students.length === 0}
+            disabled={isSaving || (attendanceData?.data?.length || 0) === 0}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 ml-auto"
           >
             <Save className="w-4 h-4 mr-2" />
@@ -320,106 +297,13 @@ export default function TeacherAttendancePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {studentsLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <Skeleton className="h-12 flex-1" />
-                    <Skeleton className="h-12 w-48" />
-                    <Skeleton className="h-12 w-64" />
-                  </div>
-                ))}
-              </div>
-            ) : students.length === 0 ? (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                No students enrolled in this class
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {students.map((student) => {
-                  const record = attendanceRecords.get(student.student_id);
-                  if (!record) return null;
-
-                  return (
-                    <div
-                      key={student.student_id}
-                      className="flex flex-col md:flex-row md:items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      {/* Student Name */}
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-900 dark:text-white">
-                          {student.student_first_name}{" "}
-                          {student.student_last_name}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          ID: {student.student_id}
-                        </p>
-                      </div>
-
-                      {/* Status Radio Group */}
-                      <div className="md:w-80">
-                        <RadioGroup
-                          value={record.status}
-                          onValueChange={(value) =>
-                            handleStatusChange(
-                              student.student_id,
-                              value as AttendanceStatus
-                            )
-                          }
-                          className="flex gap-2"
-                        >
-                          {(
-                            [
-                              "present",
-                              "absent",
-                              "late",
-                              "excused",
-                            ] as AttendanceStatus[]
-                          ).map((status) => (
-                            <div
-                              key={status}
-                              className="flex items-center space-x-2"
-                            >
-                              <RadioGroupItem
-                                value={status}
-                                id={`${student.student_id}-${status}`}
-                              />
-                              <Label
-                                htmlFor={`${student.student_id}-${status}`}
-                                className="cursor-pointer capitalize"
-                              >
-                                <Badge
-                                  variant={getStatusBadgeVariant(status)}
-                                  className="text-xs"
-                                >
-                                  {status}
-                                </Badge>
-                              </Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
-                      </div>
-
-                      {/* Notes */}
-                      <div className="md:w-64">
-                        <Textarea
-                          placeholder="Add notes (optional)"
-                          value={record.notes}
-                          onChange={(e) =>
-                            handleNotesChange(
-                              student.student_id,
-                              e.target.value
-                            )
-                          }
-                          className="resize-none h-10"
-                          rows={1}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <AttendanceList
+              studentsLoading={attendanceLoading}
+              attendanceData={attendanceData.data || []}
+              attendanceRecords={attendanceRecords}
+              handleStatusChange={handleStatusChange}
+              getStatusBadgeVariant={getStatusBadgeVariant}
+            />
           </CardContent>
         </Card>
       </div>

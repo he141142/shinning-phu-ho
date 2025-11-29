@@ -24,6 +24,10 @@ const formatDate = (dateString: string) => {
   });
 };
 
+export interface StudentFilterExtendFeature {
+  not_joined_semesters_id: Map<number, boolean>;
+}
+
 export interface SemesterSelectProps {
   selectedSemesterId: number;
   setSelectedSemesterId: React.Dispatch<React.SetStateAction<number>>;
@@ -41,6 +45,7 @@ export interface SemesterSelectProps {
   setSelectedSemester: React.Dispatch<
     React.SetStateAction<ClassSemester | null | undefined>
   >;
+  extendFeature?: StudentFilterExtendFeature;
 }
 
 export const SemesterSelect: React.FC<SemesterSelectProps> = ({
@@ -50,7 +55,11 @@ export const SemesterSelect: React.FC<SemesterSelectProps> = ({
   enrollmentDates,
   classId,
   setSelectedSemester,
+  extendFeature,
 }) => {
+  
+  console.log("extendFeature:", extendFeature);
+  
   const { data: classSemesters, isPending: isClassSemPending } =
     useGetClassSemesters(classId);
 
@@ -120,22 +129,34 @@ export const SemesterSelect: React.FC<SemesterSelectProps> = ({
                 <SelectValue placeholder="Choose a semester" />
               </SelectTrigger>
               <SelectContent>
-                {classSemesters?.GetClassSemesters.map((semester) => (
-                  <SelectItem
-                    key={semester.semester_id}
-                    value={semester.semester_id.toString()}
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-semibold">
-                        {semester.semester_name}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {formatDate(semester.start_date)} -{" "}
-                        {formatDate(semester.end_date)}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
+                {classSemesters?.GetClassSemesters.map((semester) => {
+                  let hasHMap = extendFeature?.not_joined_semesters_id;
+
+                  let active_semester_select = false;
+                  if (hasHMap) {
+                    active_semester_select =
+                      hasHMap.get(semester.semester_id) ?? false;
+                  }
+
+                  return (
+                    <SelectItem
+                      key={semester.semester_id}
+                      value={semester.semester_id.toString()}
+                      disabled={active_semester_select}
+                      className={active_semester_select ? "opacity-50" : ""}
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-semibold">
+                          {semester.semester_name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {formatDate(semester.start_date)} -{" "}
+                          {formatDate(semester.end_date)}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

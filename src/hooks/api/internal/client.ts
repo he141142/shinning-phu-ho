@@ -1,4 +1,4 @@
-import { HOST } from "@/static/env";
+import { CALENDAR_HOST, HOST } from "@/static/env";
 import { InterceptorManager } from "./interceptor";
 import { apiLogger } from "./logger";
 import { ApiError, RequestInterceptor, RequestOptions, ResponseInterceptor } from "./type";
@@ -240,4 +240,4 @@ export class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient(HOST);
+export const apiClient = new ApiClient(CALENDAR_HOST);

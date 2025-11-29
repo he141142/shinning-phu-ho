@@ -41,6 +41,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { SemesterSelect } from "./semester-select";
 import { UseSemesterSelect } from "./hooks/useSemesterSelect";
 import { useJoinStudentToClass } from "@/hooks/classes/useJoinStudentToClass";
+import { StudentClassInfo } from "@/models/students/GetStudentDetail/GetStudentDetail";
 
 // Mock student data - Replace with actual API call
 interface Student {
@@ -105,14 +106,38 @@ export default function ModernEnrollStudentForm({
     isError: isSearchStudentError,
     isPending,
     isFetching,
+    refetch: refetchStudentData,
   } = useSerachStudentsByName({
     name: debouncedSearchQuery,
     page: currentPage,
     per_page: 10,
     extensions: {
-       "exclude.student.in.class.id": classId
-    }
+      "fetch.class.semesters": classId,
+    },
   });
+
+  // buil hash map for quick lookup student semester data:
+  // student -> class -> semester
+  let studentSemesterMapByClass: Map<
+    number,
+    Map<number, StudentClassInfo>
+  > = new Map();
+  studentSemesterMapByClass =
+    studentData?.GetStudentsFilterByName?.data?.reduce((map, student) => {
+      let etx_classess = student.extend_class_info;
+      if (!etx_classess) return map;
+
+      let student_id = student.id;
+      if (!map.has(student_id)) {
+        map.set(student_id, new Map());
+      }
+
+      etx_classess.forEach((etx_class) => {
+        map.get(student_id)!.set(etx_class.class_id, etx_class);
+      });
+      return map;
+    }, studentSemesterMapByClass) ?? new Map();
+  console.log("studentSemesterMapByClass", studentSemesterMapByClass);
 
   // Reset pagination when debounced search query changes
   useEffect(() => {
@@ -211,9 +236,7 @@ export default function ModernEnrollStudentForm({
     setCompletedSteps((prev) => ({ ...prev, confirm: true }));
 
     try {
-      // TODO: Replace with actual API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
-
       await joinsStudentToClass(
         {
           input: {
@@ -229,12 +252,11 @@ export default function ModernEnrollStudentForm({
                 `${selectedStudent.first_name} ${selectedStudent.last_name} successfully enrolled!`
               ),
             });
-            // setTimeout(() => {
-            //   onClose();
-            //   window.location.reload();
-            // }, 1000);
+
             onConfirmSubmit();
             setIsEnrolling(false);
+            onClose();
+            refetchStudentData();
           },
           onError: (err) => {
             toast({
@@ -257,10 +279,6 @@ export default function ModernEnrollStudentForm({
     if (tabValue === "confirm") return !completedSteps["enrollment-info"];
     return false;
   };
-
-  // const selectedSemester = availableSemesters.find(
-  //   (s) => s.semester_id.toString() === selectedSemesterId
-  // );
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -820,6 +838,18 @@ export default function ModernEnrollStudentForm({
                     setEnrolmentDate={setEnrollmentDates}
                     setSelectedSemesterId={setSelectedSemesterId}
                     setSelectedSemester={setSelectedSemester}
+                    extendFeature={{
+                      not_joined_semesters_id:
+                        studentSemesterMapByClass
+                          .get(selectedStudent?.id ?? -1)
+                          ?.get(classId!)
+                          ?.semesters_joined.map((s) => s.semester_id)
+                          .reduce((map, semesterId) => {
+                            map.set(semesterId, true);
+                            return map;
+                          }, new Map<number, boolean>()) ??
+                        new Map<number, boolean>(),
+                    }}
                   />
 
                   <Button

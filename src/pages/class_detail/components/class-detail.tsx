@@ -76,7 +76,7 @@ import { useRouter } from "next/navigation";
 import { SemesterTimeline, ClassSemesterData } from "./SemesterTimeline";
 import { Semester } from "@/models/semesters/entity";
 import { useGetClassById } from "@/hooks";
-import { ClassSemester } from "@/hooks/classes/useGetClassSemesters";
+import { ClassSemester, useGetClassSemesters } from "@/hooks/classes/useGetClassSemesters";
 import { SemesterSelect } from "./semester-select";
 import { SemesterSelectorStatic } from "@/components/classes/SemesterSelectorStatic";
 import { RenderStudentSkeletons } from "./render-skeletons";
@@ -141,6 +141,8 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
   // Parse classId from slug with proper validation
   const classId = slug ? parseInt(slug, 10) : undefined;
 
+  const { data: classSemestersData, isLoading: isClassSemestersLoading, error: classSemestersError ,refetch: refetchClassSemesters} = useGetClassSemesters(classId);
+
   // Hooks for data
   const { mutate: updateClass, isPending: isUpdating } = useEditClassInfo();
   const { data: semestersData } = useGetListSemesters({ page: 1, limit: 100 });
@@ -169,6 +171,39 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
       clearInterval(timer);
     };
   }, []);
+
+  useEffect(() => {
+    if (classSemestersData && classSemestersData.GetClassSemesters && classSemestersData.GetClassSemesters.length > 0) {
+      const past: Semester[] = [];
+      const upcoming: Semester[] = [];
+      const currentSemesterId = classData?.GetClassById?.semester?.semester_id;
+      
+      let sems = classSemestersData.GetClassSemesters;
+
+      sems.forEach((sem) => {
+          if (sem.status === "COMPLETED"){
+            past.push({
+              semester_id: sem.semester_id,
+              semester_name: sem.semester_name,
+              start_date: sem.start_date,
+              end_date: sem.end_date,
+            });
+          } else if (sem.status === "UP_COMING"){
+            upcoming.push({
+              semester_id: sem.semester_id,
+              semester_name: sem.semester_name,
+              start_date: sem.start_date,
+              end_date: sem.end_date,
+            });
+          }else {
+            // CURRENT
+          }
+      });
+      
+      setClassPastSemesters(past);
+      setClassUpcomingSemesters(upcoming);
+    }
+  }, [classSemestersData]);
 
   useEffect(() => {
     if (classData) {
@@ -275,7 +310,7 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
     setIsEditMode(false);
   };
 
-  const handleSaveChanges = handleSubmit((formData) => {
+  const handleSaveChanges = handleSubmit( (formData) => {
     if (!classId) return;
 
     console.log("form data :", formData);
@@ -324,6 +359,7 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
             setIsEditMode(false);
             // Refetch data
             refetchClassData();
+            refetchClassSemesters();
           },
           onError: (error) => {
             toast({
@@ -335,6 +371,7 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
     } else {
       setIsEditMode(false);
     }
+
   });
 
   // Semester management functions
@@ -345,6 +382,7 @@ export function ClassDetailComponent({ slug }: { slug: string }) {
       upcoming_semesters: classUpcomingSemesters,
     };
   };
+
 
   const handleEndCurrentSemester = async () => {
     // TODO: Implement actual API call to end current semester

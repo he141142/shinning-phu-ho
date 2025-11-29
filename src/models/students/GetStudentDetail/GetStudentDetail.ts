@@ -2,6 +2,8 @@ import { GetClassByIdResponse } from "@/models/class/class.detail";
 import { Grade } from "../GetListStudent/GetListStudent";
 import { Pagination } from "@/models/pagination";
 import { Teacher } from "@/models/class/class";
+import { number } from "zod";
+import { Semester } from "@/models/semesters/entity";
 
 export interface Center {
   center_id: number;
@@ -11,6 +13,11 @@ export interface Center {
   email: string;
   is_active: boolean;
   website: string;
+}
+
+export interface StudentClassInfo {
+  class_id: number;
+  semesters_joined: Semester[];
 }
 
 export interface GetStudentDetail {
@@ -34,7 +41,8 @@ export interface GetStudentDetail {
     | "start_date"
   >[];
   center: Center;
-  grade: Grade
+  grade: Grade;
+  extend_class_info?: [StudentClassInfo] | null;
 }
 
 export interface GetStudentDetailResponse {
